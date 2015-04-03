@@ -1,0 +1,538 @@
+;
+; The NSF music driver for FamiTracker
+; Version 2.11
+; By jsr (jsr@famitracker.com)
+; assemble with ca65
+;
+; Documentation is in readme.txt
+;
+; Tab stop is 4
+;
+;
+; ToDo;
+;  - Sunsoft
+;  - Support for multiple chips
+;
+;
+; Known bugs:
+;
+
+
+
+;
+; Assembler code switches
+;
+
+USE_BANKSWITCH = 1		; Enable bankswitching code
+USE_DPCM = 1			; Enable DPCM channel (currently broken, leave enabled to avoid trouble).
+						; Also leave enabled when using expansion chips
+
+;INC_MUSIC_ASM = 1		; Music is in assembler style
+RELOCATE_MUSIC = 1		; Enable if music data must be relocated
+
+ENABLE_ROW_SKIP = 1		; Enable this to add code for seeking to a row > 0 when using skip command
+
+;PACKAGE = 1			; header
+;USE_VRC6 = 1 			; Enable this to include VRC6 code
+;USE_VRC7 = 1			; Enable this to include VRC7 code
+;USE_MMC5 = 1			; Enable this to include MMC5 code
+;USE_FDS  = 1			; Enable this to include FDS code
+;USE_N163 = 1			; Enable this to include N163 code
+;USE_S5B  = 1			; Enable this to include 5B code
+;USE_ALL  = 1			;;; ;; ; All expansion chips, always assumes 8 N163 channels
+
+.if .defined(USE_ALL)	;;; ;; ;
+	USE_VRC6 = 1
+	USE_VRC7 = 1
+	USE_MMC5 = 1
+	USE_FDS  = 1
+	USE_N163 = 1
+	USE_S5B  = 1
+.endif
+EXPANSION_FLAG = .defined(USE_VRC6) + .defined(USE_VRC7) << 1 + .defined(USE_FDS) << 2 + .defined(USE_MMC5) << 3 + .defined(USE_N163) << 4 + .defined(USE_S5B) << 5
+
+NTSC_PERIOD_TABLE = 1
+.if !(EXPANSION_FLAG)
+	PAL_PERIOD_TABLE = 1 ; forbid PAL table when there is any expansion chip
+.endif
+
+;ENABLE_SFX = 1			; Enable this to enable sound effect support (not yet working)
+;SCALE_NOISE = 1		; Enable 4 bit noise period scaling
+
+;CHANNEL_CONTROL = 1	; Enable to access channel enable/disable routines
+
+
+;
+; Constants
+;
+
+; Setup the pattern number -> channel mapping, as exported by the tracker
+;;; ;; ; many of these have been renamed for consistency
+;;; ;; ; some are moved from the respective chips' asm files
+
+NAMCO_CHANNELS = 8
+
+CH_COUNT_2A03 = 4
+CH_COUNT_MMC5 = 2 * .defined(USE_MMC5)
+CH_COUNT_VRC6 = 3 * .defined(USE_VRC6)
+.if EXPANSION_FLAG - .defined(USE_N163) << 4
+CH_COUNT_N163 = 8 * .defined(USE_N163) ; allow this to change once cc65 is embedded into 0CC-FT
+.else
+CH_COUNT_N163 = NAMCO_CHANNELS * .defined(USE_N163)
+.endif
+CH_COUNT_FDS  = 1 * .defined(USE_FDS)
+CH_COUNT_S5B  = 3 * .defined(USE_S5B)
+CH_COUNT_VRC7 = 6 * .defined(USE_VRC7)
+
+MMC5_OFFSET = CH_COUNT_2A03
+VRC6_OFFSET = CH_COUNT_MMC5 + MMC5_OFFSET
+N163_OFFSET = CH_COUNT_VRC6 + VRC6_OFFSET
+FDS_OFFSET  = CH_COUNT_N163 + N163_OFFSET
+S5B_OFFSET  = CH_COUNT_FDS  + FDS_OFFSET
+VRC7_OFFSET = CH_COUNT_S5B  + S5B_OFFSET
+DPCM_OFFSET = CH_COUNT_VRC7 + VRC7_OFFSET
+
+EFF_CHANS   = DPCM_OFFSET							; # of channels using vibrato & arpeggio effects (not used by DPCM)
+WAVE_CHANS  = DPCM_OFFSET - CH_COUNT_VRC7
+CHANNELS	= DPCM_OFFSET + .defined(USE_DPCM)
+
+;.if .defined(ENABLE_SFX)
+;	SFX_CHANS		= CHANNELS * 2
+;	SFX_WAVE_CHANS 	= WAVE_CHANS * 2
+;.else
+	SFX_CHANS		= CHANNELS
+	SFX_WAVE_CHANS 	= WAVE_CHANS
+;.endif
+
+.enum
+	APU_PU1
+	APU_PU2
+	APU_TRI		; 0CC: should not be compared against
+	APU_NOI		; 0CC: should not be compared against
+.endenum
+; ;; ;;;
+
+.enum			;;; ;; ; divide by 2
+	CHAN_2A03
+	CHAN_TRI
+	CHAN_NOI
+	CHAN_DPCM	; should not be used since the N163 channel count may change and invalidate ft_channel_type
+				; although in practice ft_channel_type should be patched
+	CHAN_VRC6	; used
+	CHAN_SAW	; used
+	CHAN_VRC7	; used
+	CHAN_FDS	; used
+	CHAN_MMC5
+	CHAN_N163	; used
+	CHAN_S5B 	; used
+.endenum		; ;; ;;;
+
+.enum
+	EFF_NONE
+	EFF_ARPEGGIO
+	EFF_PORTAMENTO
+	EFF_PORTA_UP
+	EFF_PORTA_DOWN
+	EFF_SLIDE_UP_LOAD
+	EFF_SLIDE_UP
+	EFF_SLIDE_DOWN_LOAD
+	EFF_SLIDE_DOWN
+.endenum
+
+.segment "ZEROPAGE"
+
+;
+; Variables that must be on zero-page
+;
+var_Temp:				.res 1						; Temporary 8-bit
+var_Temp2:				.res 1
+var_Temp3:				.res 1
+var_Temp4:				.res 1
+var_Temp16:				.res 2						; Temporary 16-bit
+var_Temp_Pointer:		.res 2						; Temporary
+var_Temp_Pointer2:		.res 2
+var_Temp_Pattern:		.res 2						; Pattern address (temporary)
+var_Note_Table:			.res 2
+
+ACC:					.res 2						; Used by division routine
+AUX:					.res 2
+EXT:					.res 2
+
+;;; ;; ; all chip-specific variables have been moved to the zeropage
+
+.if .defined(USE_MMC5)
+var_ch_LengthCounter:	 .res 6						; Length counter LLLLL-HC
+var_ch_PrevFreqHighMMC5: .res 2
+.else
+var_ch_LengthCounter:	 .res 4						; MMC5 has two extra pulse channels
+.endif
+var_Linear_Counter:		 .res 1						; Triangle linear counter
+
+.if .defined(USE_DPCM)
+var_ch_SamplePtr:		.res 1						; DPCM sample pointer
+var_ch_SampleLen:		.res 1						; DPCM sample length
+var_ch_SampleBank:		.res 1						; DPCM sample bank
+var_ch_SamplePitch:		.res 1						; DPCM sample pitch
+var_ch_DPCMDAC:			.res 1						; DPCM delta counter setting
+var_ch_DPCM_Offset:		.res 1
+var_ch_DPCM_Retrig:		.res 1						; DPCM retrigger
+var_ch_DPCM_RetrigCntr:	.res 1
+var_ch_DPCM_EffPitch:	.res 1
+.endif
+
+.if .defined(USE_VRC7)
+var_ch_vrc7_CustomPatch: .res 1						; Keep track of the custom patch
+var_ch_vrc7_Patch:		 .res CH_COUNT_VRC7			; VRC7 patch
+var_ch_vrc7_DefPatch:	 .res CH_COUNT_VRC7
+var_ch_vrc7_FnumLo:		 .res CH_COUNT_VRC7
+var_ch_vrc7_FnumHi:		 .res CH_COUNT_VRC7
+var_ch_vrc7_Bnum:		 .res CH_COUNT_VRC7
+var_ch_vrc7_ActiveNote:	 .res CH_COUNT_VRC7
+var_ch_vrc7_Command:	 .res CH_COUNT_VRC7			; 0 = halt, 1 = trigger, 80 = update
+var_ch_vrc7_OldOctave:	 .res 1						; Temp variable for old octave when triggering new notes
+var_ch_vrc7_EffPatch:	 .res 1						; V-command
+
+var_ch_vrc7_CustomHi:    .res CH_COUNT_VRC7
+var_ch_vrc7_CustomLo:    .res CH_COUNT_VRC7
+var_CustomPatchPtr:		 .res 2
+.endif
+
+.if .defined(USE_FDS)
+var_ch_Wave:			.res 1						; Index to wave table
+var_ch_ModDelay:		.res 1
+var_ch_ModDepth:		.res 1
+var_ch_ModRate:			.res 2
+var_ch_ModDelayTick:	.res 1
+var_ch_ModEffDepth:		.res 1
+var_ch_ModEffRateHi:	.res 1
+var_ch_ModEffRateLo:	.res 1
+var_ch_ModEffWritten:	.res 1
+var_ch_ResetMod:        .res 1
+var_Wave_pointer:		.res 2
+.endif
+
+.if .defined(USE_N163)
+;var_ch_Wave:            .res 8
+var_ch_WavePtrLo:       .res CH_COUNT_N163
+var_ch_WavePtrHi:       .res CH_COUNT_N163
+var_ch_WaveLen:         .res CH_COUNT_N163			;;; ;; ; also used for N163 Yxx
+var_ch_WavePos:         .res CH_COUNT_N163
+var_ch_WavePosOld:      .res CH_COUNT_N163			;;; ;; ; overridden by Yxx
+
+var_ch_N163_LastHiFreq: .res CH_COUNT_N163
+
+var_NamcoChannels:      .res 1                      ; Number of active N163 channels
+var_NamcoChannelsReg:   .res 1
+
+var_NamcoInstrument:    .res CH_COUNT_N163
+.endif
+
+.if .defined(USE_S5B)								;;; ;; ;
+var_Noise_Period:		.res 1						; $06
+var_Pul_Noi:			.res 1						; $07
+var_EnvelopeRate:		.res 2						; $0B, $0C
+var_EnvelopeType:		.res 1						; $0D
+var_ch_5B_Env_Enable:	.res CH_COUNT_S5B			; 0x10 on, 0x00 off
+var_ch_5B_Duty:			.res CH_COUNT_S5B			; noise mode value due to Vxx, overridden by instrument settings
+.endif												; ;; ;;;
+
+last_zp_var:			.res 1						; Not used
+
+
+.segment "BSS"
+
+;
+; Driver variables
+;
+
+; Song header (necessary to be in order)
+var_Song_list:			.res 2						; Song list address
+var_Instrument_list:	.res 2						; Instrument list address
+.if .defined(USE_DPCM)
+var_dpcm_inst_list:		.res 2						; DPCM instruments
+var_dpcm_pointers:		.res 2						; DPCM sample pointers
+.endif
+var_Groove_Table:		.res 2						;;; ;; ; Grooves
+var_SongFlags:			.res 1						; Song flags, bit 0 = bankswitched, bit 1 = old vibrato, bit 2 - 7 = unused
+.if .defined(USE_FDS)
+var_Wavetables:			.res 2						; FDS waves
+.endif
+
+var_Channels:			.res 1						; Channel enable/disable
+var_AllChannels:        .res 1						;;; ;; ; moved from N163
+var_EffChannels:        .res 1						; ;; ;;; check against this for DPCM channel
+
+; Track header (necessary to be in order)
+var_Frame_List:			.res 2						; Pattern list address
+var_Frame_Count:		.res 1						; Number of frames
+var_Pattern_Length:		.res 1						; Global pattern length
+var_Speed:				.res 1						; Speed setting
+var_Tempo:				.res 1						; Tempo setting
+var_GroovePointer:		.res 1						;;; ;; ; Groove setting
+var_InitialBank:		.res 1
+
+; General
+var_PlayerFlags:		.res 1						; Player flags, bit 0 = playing, bit 1 - 7 unused
+var_Pattern_Pos:		.res 1						; Global pattern row
+var_Current_Frame:		.res 1						; Current frame
+var_Load_Frame:			.res 1						; 1 if new frame should be loaded
+
+var_Tempo_Accum:		.res 2						; Variables for speed division
+var_Tempo_Count:		.res 2						;  (if tempo support is not needed then this can be optimized)
+var_Tempo_Dec:			.res 2
+var_Sweep:				.res 1						; This has to be saved
+
+.if .defined(USE_BANKSWITCH)
+var_Bank:				.res 1
+.endif
+var_Jump:				.res 1						; If a Jump should be executed
+var_Skip:				.res 1						; If a Skip should be executed
+.if .defined(ENABLE_ROW_SKIP)
+var_SkipTo:				.res 1						; Skip to row number
+.endif
+
+var_sequence_ptr:		.res 1
+var_sequence_result:	.res 1
+
+;var_enabled_channels:	.res 1
+
+; Channel variables
+
+; General channel variables, used by the pattern reader (all channels)
+var_ch_PatternAddrLo:	.res CHANNELS				; Holds current pattern position
+var_ch_PatternAddrHi:	.res CHANNELS
+.if .defined(USE_BANKSWITCH)
+var_ch_Bank:			.res CHANNELS				; Pattern bank
+.endif
+var_ch_Note:			.res CHANNELS				; Current channel note
+var_ch_VolColumn:		.res CHANNELS				; Volume column
+var_ch_VolDelay:		.res CHANNELS				;;; ;; ; Delayed channel volume
+var_ch_VolDefault:		.res CHANNELS				;;; ;; ; Existing channel volume
+var_ch_Delay:			.res CHANNELS				; Delay command
+var_ch_NoteCut:			.res CHANNELS
+var_ch_NoteRelease:		.res CHANNELS				;;; ;; ; Delayed note release
+var_ch_Transpose:		.res CHANNELS				;;; ;; ; Delayed transpose
+var_ch_State:			.res CHANNELS
+var_ch_FinePitch:		.res CHANNELS				; Fine pitch setting
+
+var_ch_NoteDelay:		.res CHANNELS				; Delay in rows until next note
+var_ch_DefaultDelay:	.res CHANNELS				; Default row delay, if exists
+var_ch_Trigger:			.res CHANNELS				;;; ;; ; Set for one frame when new note is encountered
+
+; Following is specific to chip channels (2A03, VRC6...)
+
+var_ch_TimerPeriodHi:	.res EFF_CHANS				; Current channel note period
+var_ch_TimerPeriodLo:	.res EFF_CHANS
+var_ch_PeriodCalcLo:	.res EFF_CHANS 				; Frequency after fine pitch and vibrato has been applied
+var_ch_PeriodCalcHi:	.res EFF_CHANS
+;var_ch_OutVolume:		.res EFF_CHANS				; Volume for the APU
+var_ch_VolSlide:		.res EFF_CHANS				;;; ;; ; Volume slide
+
+; --- Testing ---
+;var_ch_LoopCounter:		.res CHANNELS
+; --- Testing ---
+
+; Square 1 & 2 variables
+var_ch_Sweep:			.res 2						; Hardware sweep
+var_ch_PrevFreqHigh:	.res 2						; Used only by 2A03 pulse channels
+
+; Sequence variables
+var_ch_SeqVolume:		.res SFX_WAVE_CHANS * 2		; Sequence 1: Volume
+var_ch_SeqArpeggio:		.res SFX_WAVE_CHANS * 2		; Sequence 2: Arpeggio
+var_ch_SeqPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 3: Pitch bend
+var_ch_SeqHiPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 4: High speed pitch bend
+var_ch_SeqDutyCycle:	.res SFX_WAVE_CHANS * 2		; Sequence 5: Duty cycle / Noise Mode
+var_ch_Volume:			.res SFX_WAVE_CHANS			; Output volume
+var_ch_DutyCycle:		.res SFX_WAVE_CHANS			; Duty cycle / Noise mode
+var_ch_SequencePtr1:	.res SFX_WAVE_CHANS			; Index pointers for sequences
+var_ch_SequencePtr2:	.res SFX_WAVE_CHANS
+var_ch_SequencePtr3:	.res SFX_WAVE_CHANS
+var_ch_SequencePtr4:	.res SFX_WAVE_CHANS
+var_ch_SequencePtr5:	.res SFX_WAVE_CHANS
+
+;var_ch_fixed:			.res SFX_WAVE_CHANS
+
+var_ch_ArpFixed:        .res EFF_CHANS
+
+; Track variables for effects
+var_ch_Effect:			.res EFF_CHANS				; Arpeggio & portamento
+var_ch_EffParam:		.res EFF_CHANS				; Effect parameter (used by portamento and arpeggio)
+
+var_ch_PortaToHi:		.res EFF_CHANS 				; Portamento
+var_ch_PortaToLo:		.res EFF_CHANS
+var_ch_ArpeggioCycle:	.res EFF_CHANS				; Arpeggio cycle
+
+var_ch_VibratoPos:		.res EFF_CHANS				; Vibrato
+var_ch_VibratoDepth:	.res EFF_CHANS
+var_ch_VibratoSpeed:	.res EFF_CHANS
+var_ch_TremoloPos:		.res EFF_CHANS				; Tremolo
+var_ch_TremoloDepth:	.res EFF_CHANS				; combine these
+var_ch_TremoloSpeed:	.res EFF_CHANS
+var_ch_TremoloResult:   .res EFF_CHANS
+;var_ch_VibratoParam:	.res EFF_CHANS
+;var_ch_TremoloParam:	.res EFF_CHANS
+
+ECHO_BUFFER_LENGTH = 3								;;; ;; ; Echo buffer
+var_ch_EchoBuffer:		.res (ECHO_BUFFER_LENGTH + 1) * CHANNELS
+
+; End of variable space
+last_bss_var:			.res 1						; Not used
+
+
+.segment "CODE"
+
+; NSF entry addresses
+
+.if .defined(PACKAGE)
+	.byte "0CCFT ", $02, $0A
+.endif
+
+LOAD:
+INIT:
+	jmp	ft_music_init
+PLAY:
+	jmp	ft_music_play
+
+.if .defined(CHANNEL_CONTROL)
+;;; ;; ; TODO: channel flags for each expansion chip
+; Disable channel in X, X = {00 : Square 1, 01 : Square 2, 02 : Triangle, 03 : Noise, 04 : DPCM}
+ft_disable_channel:
+	lda bit_mask, x
+	eor #$FF
+	and var_Channels
+	sta var_Channels
+	rts
+
+; Enable channel in X
+ft_enable_channel:
+	lda bit_mask, x
+	ora var_Channels
+	sta var_Channels
+	lda #$FF
+	cpx #$00
+	beq :+
+	cpx #$01
+	beq :++
+	rts
+:	sta var_ch_PrevFreqHigh
+	rts
+:	sta var_ch_PrevFreqHigh + 1
+	rts
+.endif
+
+; The rest of the code
+	.include "init.s"
+	.include "player.s"
+	.include "effects.s"
+	.include "instrument.s"
+	.include "apu.s"
+
+.if .defined(USE_VRC6)
+	.include "vrc6.s"
+.endif
+.if .defined(USE_VRC7)
+	.include "vrc7.s"
+.endif
+.if .defined(USE_MMC5)
+	.include "mmc5.s"
+.endif
+.if .defined(USE_FDS)
+	.include "fds.s"
+.endif
+.if .defined(USE_N163)
+	.include "n163.s"
+.endif
+.if .defined(USE_S5B)
+	.include "s5b.s"
+.endif
+
+;
+; Channel maps, will be moved to exported data
+;
+
+;;; ;; ; ft_channel_map is unnecessary
+
+ft_channel_type:
+	.byte CHAN_2A03, CHAN_2A03, CHAN_TRI, CHAN_NOI
+.repeat CH_COUNT_MMC5
+	.byte CHAN_MMC5
+.endrep
+.if .defined(USE_VRC6)
+	.byte CHAN_VRC6, CHAN_VRC6, CHAN_SAW
+.endif
+.repeat CH_COUNT_N163		; 0CC: check
+	.byte CHAN_N163
+.endrep
+.repeat CH_COUNT_FDS
+	.byte CHAN_FDS
+.endrep
+.repeat CH_COUNT_S5B
+	.byte CHAN_S5B
+.endrep
+.repeat CH_COUNT_VRC7
+	.byte CHAN_VRC7
+.endrep
+.if .defined(USE_DPCM)
+	.byte CHAN_DPCM
+.endif
+
+bit_mask:		;;; ;; ; general-purpose bit mask
+.repeat 8, i
+	.byte 1 << i
+.endrep
+
+; Include period tables
+.include "periods.s"
+
+; Vibrato table (256 bytes)
+ft_vibrato_table: ;; Patch
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01 ;;; ;; ;
+	.byte $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02, $02 ;;; ;; ;
+	.byte $00, $00, $00, $01, $01, $01, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03
+	.byte $00, $00, $00, $01, $01, $02, $02, $03, $03, $03, $04, $04, $04, $04, $04, $04
+	.byte $00, $00, $01, $02, $02, $03, $03, $04, $04, $05, $05, $06, $06, $06, $06, $06
+	.byte $00, $00, $01, $02, $03, $04, $05, $06, $07, $07, $08, $08, $09, $09, $09, $09
+	.byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $09, $0A, $0B, $0B, $0B, $0B
+	.byte $00, $01, $02, $04, $05, $06, $07, $08, $09, $0A, $0B, $0C, $0C, $0D, $0D, $0D
+	.byte $00, $01, $03, $04, $06, $08, $09, $0A, $0C, $0D, $0E, $0E, $0F, $10, $10, $10
+	.byte $00, $02, $04, $06, $08, $0A, $0C, $0D, $0F, $11, $12, $13, $14, $15, $15, $15
+	.byte $00, $02, $05, $08, $0B, $0E, $10, $13, $15, $17, $18, $1A, $1B, $1C, $1D, $1D
+	.byte $00, $04, $08, $0C, $10, $14, $18, $1B, $1F, $22, $24, $26, $28, $2A, $2B, $2B
+	.byte $00, $06, $0C, $12, $18, $1E, $23, $28, $2D, $31, $35, $38, $3B, $3D, $3E, $3F
+	.byte $00, $09, $12, $1B, $24, $2D, $35, $3C, $43, $4A, $4F, $54, $58, $5B, $5E, $5F
+	.byte $00, $0C, $18, $25, $30, $3C, $47, $51, $5A, $62, $6A, $70, $76, $7A, $7D, $7F
+
+; Todo: update the NSF exporter if offset to ft_vibrato_table is changed
+
+;
+; An example of including music follows
+;
+
+; The label that contains a pointer to the music data
+;  A simple way to handle multiple songs is to move this
+;  to RAM and setup a table of pointers to music data
+ft_music_addr:
+	.word * + 2					; This is the point where music data is stored
+
+
+.if .defined(INC_MUSIC)
+
+	; Include music
+.if .defined(INC_MUSIC_ASM)
+	; Included assembly file music, DPCM included
+	.include "music.asm"
+.else
+	; Binary chunk music
+	.incbin "music.bin"			; Music data
+.if .defined(USE_DPCM)
+	.segment "DPCM"				; DPCM samples goes here
+	.incbin "samples.bin"
+.endif
+.endif
+.endif
+
+.if .defined(HAS_NSF_HEADER)
+.segment "HEADER"
+.include "nsf_wrap.s"
+.endif

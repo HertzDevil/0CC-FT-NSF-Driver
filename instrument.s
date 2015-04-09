@@ -537,119 +537,18 @@ ft_load_instrument_2a03:
 	load_inst var_ch_SeqDutyCycle, var_ch_SequencePtr5
 
 	ldy var_Temp
-	rts
 
-; Load FDS instrument
+.ifndef USE_FDS
 ft_load_instrument_fds:
-.if .defined(USE_FDS)
-	; Read FDS instrument
-	ldy #$00
-	lda (var_Temp_Pointer), y	; Load wave index
-	iny
-	pha
-
-	; Load modulation table
-	jsr ft_reset_modtable
-:
-	lda (var_Temp_Pointer), y
-	pha
-	and #$07
-	sta $4088
-	pla
-	lsr a
-	lsr a
-	lsr a
-	sta $4088
-	iny
-	cpy #$11
-	bne :-
-
-	lda (var_Temp_Pointer), y	; Modulation delay
-	iny
-	sta var_ch_ModDelay
-	lda (var_Temp_Pointer), y	; Modulation depth
-	iny
-	sta var_ch_ModDepth
-	lda (var_Temp_Pointer), y	; Modulation freq low
-	iny
-	sta var_ch_ModRate
-	lda (var_Temp_Pointer), y	; Modulation freq high
-	sta var_ch_ModRate + 1
-
-	pla							; Get wave index
-	jsr ft_load_fds_wave
-
-	; Finish by loading sequences
-	ldy #$15
-	jmp ft_load_instrument_2a03
 .endif
-
-; Load VRC7 instrument
+.ifndef USE_VRC7
 ft_load_instrument_vrc7:
-.if .defined(USE_VRC7)
-	; Read VRC7 instrument
-	ldy #$00
-	lda (var_Temp_Pointer), y		            ; Load patch number
-	sta var_ch_vrc7_Patch - VRC7_OFFSET, x		; vrc7 channel offset
-	sta var_ch_vrc7_DefPatch - VRC7_OFFSET, x
-	bne :+							            ; Skip custom settings if patch > 0
-
-	; Store path to custom patch settings
-	clc
-	lda var_Temp_Pointer
-	adc #$01
-	sta var_ch_vrc7_CustomLo - VRC7_OFFSET, x
-	lda var_Temp_Pointer + 1
-	adc #$00
-	sta var_ch_vrc7_CustomHi - VRC7_OFFSET, x
-
-:	ldy var_Temp
-	rts
 .endif
-
-; Load N163 instrument
+.ifndef USE_N163
 ft_load_instrument_n163:
-.if .defined(USE_N163)
-	ldy #$00
-	lda (var_Temp_Pointer), y
-	sta var_ch_WaveLen - N163_OFFSET, x
-	iny
-	lda (var_Temp_Pointer), y
-	sta var_ch_WavePos - N163_OFFSET, x
-	sta var_ch_WavePosOld - N163_OFFSET, x		;;; ;; ;
-	iny
-.if .defined(RELOCATE_MUSIC)
-	clc
-	lda (var_Temp_Pointer), y
-	adc ft_music_addr
-	sta var_ch_WavePtrLo - N163_OFFSET, x
-	iny
-	lda (var_Temp_Pointer), y
-	adc ft_music_addr + 1
-	sta var_ch_WavePtrHi - N163_OFFSET, x
-	iny
-.else
-	lda (var_Temp_Pointer), y
-	sta var_ch_WavePtrLo - N163_OFFSET, x
-	iny
-	lda (var_Temp_Pointer), y
-	sta var_ch_WavePtrHi - N163_OFFSET, x
-	iny
 .endif
-	lda var_NamcoInstrument, x
-	cmp var_Temp3
-	beq :+
-	lda #$00             ; reset wave
-	sta var_ch_DutyCycle, x
-	lda var_Temp3
-	; Load N163 wave
-;    jsr ft_n163_load_wave
-:   sta var_NamcoInstrument, x
-	jsr ft_load_instrument_2a03
-	jsr ft_n163_load_wave2
-	ldy var_Temp
+
 	rts
-.endif
 
 ; Make sure the period doesn't exceed max or min
 ft_limit_freq:

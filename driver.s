@@ -280,6 +280,7 @@ var_Load_Frame:			.res 1						; 1 if new frame should be loaded
 var_Tempo_Accum:		.res 2						; Variables for speed division
 var_Tempo_Count:		.res 2						;  (if tempo support is not needed then this can be optimized)
 var_Tempo_Dec:			.res 2
+var_Tempo_Modulus:		.res 2						;;; ;; ; from 0.4.6
 var_Sweep:				.res 1						; This has to be saved
 
 .if .defined(USE_BANKSWITCH)
@@ -445,6 +446,21 @@ ft_enable_channel:
 .if .defined(USE_S5B)
 	.include "s5b.s"
 .endif
+
+ft_bankswitch:
+;	sta $5FFA
+	sta $5FFB
+	rts
+ft_bankswitch2:
+	clc
+	sta $5FFC
+	adc #$01
+	sta $5FFD
+	adc #$01
+	sta $5FFE
+;	adc #$01
+;	sta $5FFF
+	rts
 
 ;
 ; Channel maps, will be moved to exported data

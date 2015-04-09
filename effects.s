@@ -362,21 +362,25 @@ ft_portamento:
 	jmp ft_post_effects
 
 ft_portamento_up:
+	lda var_ch_Note, x
+	beq :+
 	lda var_ch_EffParam, x
 	sta var_Temp16
 	lda #$00
 	sta var_Temp16 + 1
 	jsr ft_period_remove
 	jsr ft_limit_freq
-	jmp ft_post_effects
+:	jmp ft_post_effects
 ft_portamento_down:
+	lda var_ch_Note, x
+	beq :+
 	lda var_ch_EffParam, x
 	sta var_Temp16
 	lda #$00
 	sta var_Temp16 + 1
 	jsr ft_period_add
 	jsr ft_limit_freq
-	jmp ft_post_effects
+:	jmp ft_post_effects
 
 ft_period_add:
 .if .defined(USE_N163)

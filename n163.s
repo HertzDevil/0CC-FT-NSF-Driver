@@ -2,6 +2,48 @@
 ; Namco 163 expansion sound
 ;
 
+; Load N163 instrument
+ft_load_instrument_n163:
+	ldy #$00
+	lda (var_Temp_Pointer), y
+	sta var_ch_WaveLen - N163_OFFSET, x
+	iny
+	lda (var_Temp_Pointer), y
+	sta var_ch_WavePos - N163_OFFSET, x
+	sta var_ch_WavePosOld - N163_OFFSET, x		;;; ;; ;
+	iny
+.if .defined(RELOCATE_MUSIC)
+	clc
+	lda (var_Temp_Pointer), y
+	adc ft_music_addr
+	sta var_ch_WavePtrLo - N163_OFFSET, x
+	iny
+	lda (var_Temp_Pointer), y
+	adc ft_music_addr + 1
+	sta var_ch_WavePtrHi - N163_OFFSET, x
+	iny
+.else
+	lda (var_Temp_Pointer), y
+	sta var_ch_WavePtrLo - N163_OFFSET, x
+	iny
+	lda (var_Temp_Pointer), y
+	sta var_ch_WavePtrHi - N163_OFFSET, x
+	iny
+.endif
+	lda var_NamcoInstrument, x
+	cmp var_Temp3
+	beq :+
+	lda #$00             ; reset wave
+	sta var_ch_DutyCycle, x
+	lda var_Temp3
+	; Load N163 wave
+;    jsr ft_n163_load_wave
+:   sta var_NamcoInstrument, x
+	jsr ft_load_instrument_2a03
+	jsr ft_n163_load_wave2
+	ldy var_Temp
+	rts
+
 ft_init_n163:
 	; Enable sound, copied from PPMCK and verified on a real Namco cart
 	; no sound without this!

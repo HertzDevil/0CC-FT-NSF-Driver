@@ -388,8 +388,7 @@ ft_load_frame:
 	pha						; Frame bank
 	lda var_InitialBank
 	beq :+
-;	sta $5FFA
-	sta $5FFB
+	jsr ft_bankswitch
 :	pla
 .endif
 

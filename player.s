@@ -60,6 +60,23 @@ ft_do_row_update:
 	; It won't work if new pattern adresses are loaded before the delayed note is played
 	lda var_Load_Frame
 	beq @SkipFrameLoad
+	;;; ;; ; from 0.4.6
+	ldx #$00
+:	lda var_ch_Delay, x
+	beq :+
+	lda #$00
+	sta var_ch_Delay, x
+	jsr ft_read_pattern
+:	inx
+.if .defined(USE_ALL)
+	cpx #CHANNELS
+.elseif .defined(USE_N163)
+	cpx var_AllChannels
+.else
+	cpx #CHANNELS
+.endif
+	bne :--
+	
 	lda #$00
 	sta var_Load_Frame
 	lda var_Current_Frame
@@ -115,21 +132,19 @@ ft_read_channels:
 	; Store next row number in Temp2
 	sta var_SkipTo
 .endif
+	lda #$01
+	sta var_Load_Frame
 	inc var_Current_Frame
 	lda var_Current_Frame
 	cmp var_Frame_Count
 	beq @RestartSong
 ;	jsr ft_load_frame
-	lda #$01
-	sta var_Load_Frame
 
 	jmp @NoPatternEnd
 @RestartSong:
 	lda #$00
 	sta var_Current_Frame
 ;	jsr ft_load_frame
-	lda #$01
-	sta var_Load_Frame
 
 	jmp @NoPatternEnd
 @NoSkip:
@@ -173,6 +188,12 @@ ft_skip_row_update:
 	lda #$00				; ;; ;;;
 	sta var_ch_NoteCut, x
 	sta var_ch_Note, x   ; todo: make a subroutine for note cut
+.if .defined(USE_VRC7)
+	lda ft_channel_type, x
+	cmp #CHAN_DPCM
+	beq @BeginRelease	; 0CC: check
+	lda #$00
+.endif
 	sta var_ch_PortaToLo, x
 	sta var_ch_PortaToHi, x
 	sta var_ch_TimerPeriodLo, x
@@ -339,7 +360,7 @@ ft_read_pattern:
 	; First setup the bank
 	lda var_ch_Bank, x
 	beq :+
-	sta $5FFB							; Patterns are located @ $B000-$BFFF
+	jsr ft_bankswitch
 :	; Go on
 .endif
 	lda var_ch_PatternAddrLo, x			; Load pattern address
@@ -455,7 +476,7 @@ ft_read_note:
 .endif
 	sta var_ch_Volume, x
 	lda #$00
-;	sta var_ch_ArpeggioCycle, x		;;; ;; ; 0CC: check
+	sta var_ch_ArpeggioCycle, x
 .ifdef USE_S5B		;;; ;; ;
 	lda ft_channel_type, x
 	cpx #CHAN_S5B
@@ -490,11 +511,6 @@ ft_read_note:
 @JumpToDone:
 	jmp @ReadIsDone
 @NoteRelease:
-	lda var_ch_State, x
-	cmp #$01
-	beq @JumpToDone
-	lda #$01
-	sta var_ch_State, x
 .if .defined(USE_DPCM)
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM				; ;; ;;;
@@ -504,6 +520,11 @@ ft_read_note:
 	jmp @ReadIsDone
 :
 .endif
+	lda var_ch_State, x
+	cmp #$01
+	beq @JumpToDone
+	lda #$01
+	sta var_ch_State, x
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_VRC7				; ;; ;;;
@@ -832,8 +853,8 @@ ft_cmd_porta_down:
 ft_cmd_arpeggio:
 	jsr ft_get_pattern_byte
 	sta var_ch_EffParam, x
-	lda #$00
-	sta var_ch_ArpeggioCycle, x
+;	lda #$00
+;	sta var_ch_ArpeggioCycle, x
 	lda #EFF_ARPEGGIO
 	sta var_ch_Effect, x
 	jmp ft_read_note
@@ -1380,6 +1401,13 @@ ft_restore_speed:
 	lda var_Tempo_Accum + 1
 	adc var_Tempo_Dec + 1
 	sta var_Tempo_Accum + 1
+	sec
+	lda var_Tempo_Accum
+	sbc var_Tempo_Modulus
+	sta var_Tempo_Accum
+	lda var_Tempo_Accum + 1
+	sbc var_Tempo_Modulus + 1
+	sta var_Tempo_Accum + 1
 	lda var_GroovePointer		;;; ;; ; Move groove pointer
 	beq :+
 	jsr ft_calculate_speed
@@ -1442,6 +1470,10 @@ ft_calculate_speed:
 	sta var_Tempo_Count
 	lda ACC + 1
 	sta var_Tempo_Count + 1
+	lda EXT
+	sta var_Tempo_Modulus
+	lda EXT + 1
+	sta var_Tempo_Modulus + 1
 	pla
 	tay
 

@@ -507,14 +507,7 @@ ft_update_apu:
  .if .defined(USE_BANKSWITCH)
 	lda var_ch_SampleBank
 	beq :+
-	clc
-	sta $5FFC		; Always last bank
-	adc #$01
-	sta $5FFD
-	adc #$01
-	sta $5FFE
-;	adc #$01
-;	sta $5FFF
+	jsr ft_bankswitch2
 :
 .endif
 

@@ -1,5 +1,47 @@
 ; Takes care of the FDS registers
 
+ft_load_instrument_fds:
+	; Read FDS instrument
+	ldy #$00
+	lda (var_Temp_Pointer), y	; Load wave index
+	iny
+	pha
+
+	; Load modulation table
+	jsr ft_reset_modtable
+:
+	lda (var_Temp_Pointer), y
+	pha
+	and #$07
+	sta $4088
+	pla
+	lsr a
+	lsr a
+	lsr a
+	sta $4088
+	iny
+	cpy #$11
+	bne :-
+
+	lda (var_Temp_Pointer), y	; Modulation delay
+	iny
+	sta var_ch_ModDelay
+	lda (var_Temp_Pointer), y	; Modulation depth
+	iny
+	sta var_ch_ModDepth
+	lda (var_Temp_Pointer), y	; Modulation freq low
+	iny
+	sta var_ch_ModRate
+	lda (var_Temp_Pointer), y	; Modulation freq high
+	sta var_ch_ModRate + 1
+
+	pla							; Get wave index
+	jsr ft_load_fds_wave
+
+	; Finish by loading sequences
+	ldy #$15
+	jmp ft_load_instrument_2a03
+
 ft_fds_volume:
 	lda var_Temp				; 5x4 multiplication
 	lsr var_Temp2

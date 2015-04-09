@@ -140,7 +140,7 @@ ft_update_apu:
 	and #$7F
 	sta var_ch_Sweep + APU_PU1
 
-	;jsr @KillSweepUnit					; test
+	jsr @KillSweepUnit
 
 	lda var_ch_PeriodCalcLo + APU_PU1
 	sta $4002
@@ -260,6 +260,7 @@ ft_update_apu:
 	beq @NoSquare2Sweep
 	and #$80
 	beq @Triangle						; See if sweep is triggered
+	
 	lda var_ch_Sweep + APU_PU2			; Trigger sweep
 	sta $4005
 	and #$7F
@@ -284,7 +285,7 @@ ft_update_apu:
 @NoSquare2Sweep:				; No Sweep
 	lda #$08
 	sta $4005
-	jsr @KillSweepUnit
+	;jsr @KillSweepUnit					; test
 	lda var_ch_PeriodCalcLo + APU_PU2
 	sta $4006
 	lda var_ch_LengthCounter + APU_PU2	;;; ;; ;

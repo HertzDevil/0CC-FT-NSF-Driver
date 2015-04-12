@@ -1,9 +1,2 @@
-*.bat
-*.cfg
-*.nsf
-*.ftm
-*.txt
-*.lnk
-*.bin
-*.lst
+build*/
 *.o

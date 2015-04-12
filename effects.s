@@ -75,9 +75,9 @@ ft_jump_to_effect:
 @EffPortaUp:
 	jmp ft_portamento_up
 @EffSlideUp:
-	jmp	ft_slide_up
+	jmp	ft_portamento ; ft_slide_up
 @EffSlideDown:
-	jmp	ft_slide_down
+	jmp	ft_portamento ; ft_slide_down
 @EffLoadSlide:
 	jmp ft_load_slide
 @NoEffect:
@@ -431,6 +431,7 @@ ft_period_remove:
 	sta var_ch_TimerPeriodHi, x
 :   rts
 
+.if 0
 ;
 ; Note slide
 ;
@@ -482,6 +483,7 @@ ft_slide_done:
 
 ft_slide_not_done:
 	jmp ft_post_effects
+.endif
 
 ;
 ; Arpeggio

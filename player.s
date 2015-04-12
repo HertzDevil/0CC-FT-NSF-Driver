@@ -417,24 +417,29 @@ ft_read_note:
 
 	lda #$01							;;; ;; ; Set note trigger flag
 	sta var_ch_Trigger, x				; ;; ;;;
-
+.if 0
 	lda var_ch_NoteCut, x
-	bne :+ ;;; ;; ;
+	bne :+
 	lda #$00
 	sta var_ch_NoteCut, x
 :
-	lda var_ch_NoteRelease, x			;;; ;; ;
+	lda var_ch_NoteRelease, x
 	bne :+
 	lda #$00
 	sta var_ch_NoteRelease, x
 :
-	lda var_ch_VolSlide, x
+	lda var_ch_Transpose, x
+	and #$F0
+	beq :+
+	;lda #$00
+	;sta var_ch_Transpose, x
+:
+.endif
+	lda var_ch_VolSlide, x				;;; ;; ;
 	bne :+
 	lda var_ch_VolDefault, x
 	sta var_ch_VolColumn, x				; ;; ;;;
 :
-	lda #$00
-	sta var_ch_Transpose, x				;;; ;; ;
 .if .defined(USE_DPCM)
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM

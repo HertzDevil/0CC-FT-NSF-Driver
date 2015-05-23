@@ -393,7 +393,7 @@ ft_load_frame:
 .endif
 
 	; Get the entry in the frame list
-	asl A					; Multiply by two
+	asl a					; Multiply by two
 	clc						; And add the frame list addr to get
 	adc var_Frame_List		; the pattern list addr
 	sta var_Temp16
@@ -402,6 +402,10 @@ ft_load_frame:
 	tax
 	adc var_Frame_List + 1
 	sta var_Temp16 + 1
+	lda var_Current_Frame	;;; ;; ;
+	bpl :+
+	inc var_Temp16 + 1
+:							; ;; ;;;
 	; Get the entry in the pattern list
 .if .defined(RELOCATE_MUSIC)
 	clc

@@ -1397,9 +1397,28 @@ StoreDPCM:							; Special case for DPCM
 	rts
 .endif
 
+;;; ;; ; Obtain current speed value
+ft_fetch_speed:
+	lda var_Speed
+	bne :+
+	lda var_Groove_Table
+	sta var_Temp_Pointer
+	lda var_Groove_Table + 1
+	sta var_Temp_Pointer + 1
+	ldy var_GroovePointer
+	lda (var_Temp_Pointer), y
+:	rts
+; ;; ;;;
+
 ; Reload speed division counter
 ft_restore_speed:
-	clc
+	lda var_Tempo				;;; ;; ;
+	bne :+
+	sta var_Tempo_Accum + 1
+	jsr ft_fetch_speed
+	sta var_Tempo_Accum
+	bne :++						; ;; ;;; always branches
+:	clc
 	lda var_Tempo_Accum
 	adc var_Tempo_Dec
 	sta var_Tempo_Accum
@@ -1413,7 +1432,7 @@ ft_restore_speed:
 	lda var_Tempo_Accum + 1
 	sbc var_Tempo_Modulus + 1
 	sta var_Tempo_Accum + 1
-	lda var_GroovePointer		;;; ;; ; Move groove pointer
+:	lda var_GroovePointer		;;; ;; ; Move groove pointer
 	beq :+
 	jsr ft_calculate_speed
 	inc var_GroovePointer
@@ -1434,9 +1453,17 @@ ft_calculate_speed:
 	tya
 	pha
 
-	; Multiply by 24
 	lda var_Tempo
-	sta AUX
+	bne :+						;;; ;; ; zero tempo -> use speed as tick
+	lda #$01
+	sta var_Tempo_Count
+	lda #$00
+	sta var_Tempo_Count + 1
+	sta var_Tempo_Modulus
+	sta var_Tempo_Modulus + 1
+	jmp @EndCalc				; ;; ;;;
+	; Multiply by 24
+:	sta AUX
 	lda #$00
 	sta AUX + 1
 	ldy #$03
@@ -1459,15 +1486,8 @@ ft_calculate_speed:
 	sta ACC + 1
 
 	; divide by speed
-	lda var_Speed
-	bne :+						;;; ;; ; fetch groove table
-	lda var_Groove_Table
-	sta var_Temp_Pointer
-	lda var_Groove_Table + 1
-	sta var_Temp_Pointer + 1
-	ldy var_GroovePointer
-	lda (var_Temp_Pointer), y	; ;; ;;;
-:	sta AUX
+	jsr ft_fetch_speed			;;; ;; ;
+	sta AUX
 	lda #$00
 	sta AUX + 1
 	jsr DIV		; ACC/AUX -> ACC, remainder in EXT
@@ -1479,6 +1499,7 @@ ft_calculate_speed:
 	sta var_Tempo_Modulus
 	lda EXT + 1
 	sta var_Tempo_Modulus + 1
+@EndCalc:						;;; ;; ;
 	pla
 	tay
 

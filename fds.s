@@ -72,6 +72,10 @@ ft_init_fds:
 	sta $4023
 	lda #$83
 	sta $4023
+	lda #$FF					;;; ;; ;
+	sta $408A
+	lda #$80
+	sta var_ch_FDSVolume		; ;; ;;;
 	rts
 
 ; Update FDS
@@ -93,18 +97,29 @@ ft_update_fds:
 	lsr a
 	beq @KillFDS
 	sta var_Temp2							; 4 bit vol
-	lda var_ch_Volume + FDS_OFFSET		; Kill channel if volume = 0
+	lda var_ch_Volume + FDS_OFFSET			; Kill channel if volume = 0
 	beq @KillFDS
 	sta var_Temp							; 5 bit vol
 	jsr ft_fds_volume
 	sec
 	sbc var_ch_TremoloResult + FDS_OFFSET
 	bpl :+
+@NoKill:
 	lda #$00
 :
 	; Load volume
-	ora #$80								; Disable the volume envelope
+	ora #$80
+	sta var_Temp							;;; ;; ;
+	lda var_ch_FDSVolume					; check the volume envelope
+	bmi :+									; envelope is disabled
+	lda var_ch_Trigger + FDS_OFFSET
+	beq :++									; envelope is enabled in middle of note
+:	lda var_Temp
 	sta $4080								; Volume
+:	lda var_ch_FDSVolume
+	bmi :+
+	sta $4080								; enable envelope after volume init
+:											; ;; ;;;
 
 	; Load frequency
 	lda var_ch_PeriodCalcHi + FDS_OFFSET
@@ -150,6 +165,8 @@ ft_update_fds:
 	sta $4087
 	rts
 @KillFDS:
+	lda var_ch_FDSVolume					;;; ;; ; return if volume envelope is enabled
+	bpl @NoKill								; ;; ;;;
 	lda #$80
 	sta $4080	; Make channel silent
 	lda #$80

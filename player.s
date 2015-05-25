@@ -702,6 +702,7 @@ ft_command_table:
 	.word ft_cmd_fds_mod_depth
 	.word ft_cmd_fds_mod_rate_hi
 	.word ft_cmd_fds_mod_rate_lo
+	.word ft_cmd_fds_volume
 .endif
 .if .defined(USE_VRC7)
 	;.word ft_cmd_vrc7_patch_change
@@ -1092,6 +1093,10 @@ ft_cmd_fds_mod_rate_lo:
 	ora #$04
 	sta var_ch_ModEffWritten
 	jmp ft_read_note
+ft_cmd_fds_volume:		;;; ;; ;
+	jsr ft_get_pattern_byte
+	sta var_ch_FDSVolume
+	jmp ft_read_note	; ;; ;;;
 .endif
 
 ; VRC7

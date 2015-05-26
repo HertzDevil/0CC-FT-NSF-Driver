@@ -258,6 +258,7 @@ ft_skip_row_update:
 	sec
 	adc var_ch_Note, x
 	sta var_ch_Note, x
+	sta var_ch_EchoBuffer, x			;;; ;; ;
 	jsr ft_translate_freq_only
 	lda #$00
 	sta var_ch_Transpose, x

@@ -183,9 +183,15 @@ ft_skip_row_update:
 @BeginCut:
 	lda var_ch_NoteCut, x
 	beq @BeginRelease
-	dec var_ch_NoteCut, x	;;; ;; ;
-	bmi @BeginRelease
-	lda #$00				; ;; ;;;
+	bpl :+					;;; ;; ;
+	and #$7F
+	sta var_ch_NoteCut, x
+	bpl :++ ; always
+:	sta var_ch_NoteCut, x
+	dec var_ch_NoteCut, x
+:	beq :+
+	bpl @BeginRelease
+:	lda #$00				; ;; ;;;
 	sta var_ch_NoteCut, x
 	sta var_ch_Note, x   ; todo: make a subroutine for note cut
 .if .defined(USE_VRC7)
@@ -208,9 +214,15 @@ ft_skip_row_update:
 @BeginRelease:
 	lda var_ch_NoteRelease, x			;;; ;; ; Delayed note release
 	beq @BeginTranspose
+	bpl :+					;;; ;; ;
+	and #$7F
+	sta var_ch_NoteRelease, x
+	bpl :++ ; always
+:	sta var_ch_NoteRelease, x
 	dec var_ch_NoteRelease, x
-	bmi @BeginTranspose
-	lda #$00
+:	beq :+
+	bpl @BeginTranspose
+:	lda #$00				; ;; ;;;
 	sta var_ch_NoteRelease, x
 	lda var_ch_State, x
 	cmp #$01
@@ -223,7 +235,7 @@ ft_skip_row_update:
 	bne :+
 	lda #$FF
 	sta var_ch_Note, x
-	jmp @BeginTranspose
+	bmi @BeginTranspose			; always
 :
 .endif
 .if .defined(USE_VRC7)

@@ -842,12 +842,13 @@ ft_cmd_effvolume:
 	asl a
 	sta var_Temp
 	lda var_ch_LengthCounter, x
-	and #$02
+	and #$01
+	ora #$02
 	bpl :++					; always
-:	and #$03
+:	and #%00000011
 	sta var_Temp
 	lda var_ch_LengthCounter, x
-	and #$F8
+	and #%11111000
 :	ora var_Temp
 	sta var_ch_LengthCounter, x
 	jmp ft_read_note

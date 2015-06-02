@@ -161,7 +161,7 @@ EXT:					.res 2
 ;;; ;; ; all chip-specific variables have been moved to the zeropage
 
 .if .defined(USE_MMC5)
-var_ch_LengthCounter:	 .res 6						; Length counter LLLLL-HC
+var_ch_LengthCounter:	 .res 6						; LLLLL-HC Length counter, Enable length counter, Enable decay/linear
 var_ch_PrevFreqHighMMC5: .res 2
 .else
 var_ch_LengthCounter:	 .res 4						; MMC5 has two extra pulse channels

@@ -1038,17 +1038,18 @@ ft_cmd_note_cut:
 	sta var_ch_NoteCut, x
 	cpx #APU_TRI							;;; ;; ;
 	bne :+
-	lda #$81
+	lda var_Linear_Counter
+	ora #$80
 	sta var_Linear_Counter
 	lda var_ch_LengthCounter + APU_TRI
-	ora #%00000010
+	and #%11111100
 	sta var_ch_LengthCounter + APU_TRI		; ;; ;;;
 :	jmp ft_read_note
 ft_cmd_linear_counter:				;;; ;; ;
 	jsr ft_get_pattern_byte
 	sta var_Linear_Counter
 	lda var_ch_LengthCounter + APU_TRI
-	and #%11111101
+	ora #%00000001
 	sta var_ch_LengthCounter + APU_TRI
 	jmp ft_read_note				; ;; ;;;
 ;;; ;; ; Effect: Note release (Lxx)

@@ -319,12 +319,15 @@ ft_update_apu:
 	lda var_ch_Note + APU_TRI
 	beq @KillTriangle
 	lda var_ch_LengthCounter + APU_TRI	;;; ;; ;
-	and #$02
-	beq :+								; branch if no envelope loop
-	lda #$81
-	bmi :++								; always
-:	lda var_Linear_Counter				;;; ;; ;
+	and #%00000011
+	beq :+								; branch if no length counter and no linear counter
+	lda var_Linear_Counter
+	and #$7F
+	bpl :++								; always
+:	lda var_Linear_Counter
+	ora #$80							; ;; ;;;
 :	sta $4008
+@EndTriangleVolume:
 	; Period table isn't limited to $7FF anymore
 	lda var_ch_PeriodCalcHi + APU_TRI
 	and #$F8
@@ -338,12 +341,14 @@ ft_update_apu:
 ;	sta $4009
 	lda var_ch_PeriodCalcLo + APU_TRI
 	sta $400A
-	lda var_Linear_Counter				;;; ;; ;
-	bmi :+
-	lda var_ch_Trigger + APU_TRI
-	beq @SkipTriangleKill
+	
+	lda var_ch_Trigger + APU_TRI		;;; ;; ;
+	bne :+
+	lda var_ch_LengthCounter + APU_TRI
+	and #%00000011
+	bne @SkipTriangleKill
 :	lda var_ch_LengthCounter + APU_TRI
-	and #$F8
+	and #%11111000
 	ora var_ch_PeriodCalcHi + APU_TRI	; ;; ;;;
 	sta $400B
 	jmp @SkipTriangleKill

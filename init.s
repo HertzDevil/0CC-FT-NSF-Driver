@@ -32,10 +32,9 @@ ft_music_init:
 	lda #$00
 	sta $4017		; ;; ;;; Disable frame IRQs
 
-	lda #$81		;;; ;; ; Reset triangle linear counter
+	lda #$FF		;;; ;; ; Reset triangle linear counter
 	sta var_Linear_Counter
-	lda #$FF		; Enable all channels
-	sta var_Channels
+	sta var_Channels	; Enable all channels
 
 	sta var_ch_DPCM_EffPitch
 	sta var_ch_DPCMDAC

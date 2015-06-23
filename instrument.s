@@ -118,8 +118,8 @@ ft_run_instrument:
 	ora #$80
 	sta var_ch_Note, x
 	jmp @ArpDone				; ;; ;;;
-:	cmp #$01
-	bcc :+
+:	cmp #$00
+	bmi :+
 	cmp #$5F
 	bcc :++
 	lda #$5F
@@ -329,9 +329,13 @@ ft_run_sequence:
 	bne :+
 	pla								; Release point not found, loop
 	rts
-:	pla								; Release point found, don't loop
+:	sta var_Temp					;;; ;; ;
+	dec var_Temp
+	pla								; Release point found, don't loop
+	cmp var_Temp
+	bcs :+							; ;; ;;;
 	lda #$FF
-	rts
+:	rts
 @ReleasePoint:						; Release point has been reached
 	sta	var_Temp					; Save index
 	lda var_ch_State, x
@@ -339,8 +343,13 @@ ft_run_sequence:
 	dey
 	lda (var_Temp_Pointer), y		; Check loop point
 	cmp #$FF
-	bne @LoopSequence
-	lda var_Temp
+	beq :++
+	dec var_Temp					;;; ;; ;
+	cmp var_Temp
+	bcs :+
+	bcc @LoopSequence ; always
+:	inc var_Temp
+:	lda var_Temp					; ;; ;;;
 	sec								; Step back one step
 	sbc #$01
 	rts

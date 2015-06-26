@@ -383,17 +383,7 @@ ft_portamento_down:
 :	jmp ft_post_effects
 
 ft_period_add:
-.if .defined(USE_N163)
-	lda ft_channel_type, x
-	cmp #CHAN_N163
-	bne :+
-	; Multiply by 4
-	asl var_Temp16
-	rol var_Temp16 + 1
-	asl var_Temp16
-	rol var_Temp16 + 1
-:
-.endif
+	;;; ;; ;
 	clc
 	lda var_ch_TimerPeriodLo, x
 	adc var_Temp16
@@ -407,17 +397,7 @@ ft_period_add:
 	sta var_ch_TimerPeriodHi, x
 :   rts
 ft_period_remove:
-.if .defined(USE_N163)
-	lda ft_channel_type, x
-	cmp #CHAN_N163
-	bne :+
-	; Multiply by 4
-	asl var_Temp16
-	rol var_Temp16 + 1
-	asl var_Temp16
-	rol var_Temp16 + 1
-:
-.endif
+	;;; ;; ;
 	sec
 	lda var_ch_TimerPeriodLo, x
 	sbc var_Temp16

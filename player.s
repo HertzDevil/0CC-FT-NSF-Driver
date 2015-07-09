@@ -194,7 +194,7 @@ ft_skip_row_update:
 :	lda #$00				; ;; ;;;
 	sta var_ch_NoteCut, x
 	sta var_ch_Note, x   ; todo: make a subroutine for note cut
-.if .defined(USE_VRC7)
+.if .defined(USE_DPCM)
 	lda ft_channel_type, x
 	cmp #CHAN_DPCM
 	beq @BeginRelease	; 0CC: check
@@ -482,6 +482,16 @@ ft_read_note:
 	sta var_ch_ResetMod
 :
 .endif
+.if .defined(USE_N163)					;;; ;; ;
+	lda ft_channel_type, x
+	cmp #CHAN_N163
+	bne :+
+	;jsr ft_n163_load_wave2
+	nop
+	nop
+	nop
+:
+.endif									; ;; ;;;
 	jsr ft_reset_instrument
 	lda #$00
 	sta var_ch_State, x
@@ -1037,7 +1047,8 @@ ft_cmd_note_cut:
 	jsr ft_get_pattern_byte
 	ora #$80
 	sta var_ch_NoteCut, x
-	cpx #APU_TRI							;;; ;; ;
+	lda ft_channel_type, x
+	cmp #CHAN_TRI							;;; ;; ;
 	bne :+
 	lda var_Linear_Counter
 	ora #$80

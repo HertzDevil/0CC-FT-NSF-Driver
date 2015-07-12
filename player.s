@@ -275,14 +275,17 @@ ft_skip_row_update:
 	lda #$00
 	sta var_ch_Transpose, x
 @DoneTranspose:
+	lda var_ch_VolSlide, x
+	bne :+
 	lda var_ch_VolDelay, x
 	beq :+
 	cmp #$10
-	bcs :+								; else var_ch_VolDelay, x == $0x
+	bcs :+
 	asl a
 	asl a
 	asl a
-	sta var_ch_VolColumn, x
+	asl a
+	sta var_ch_VolDelay, x
 :	; ;; ;;;
 	inx
 
@@ -316,11 +319,23 @@ ft_loop_channels:
 	;;; ;; ; Decrement volume delay counter after everything else is done
 	; preferred behaviour for delayed effects?
 	lda var_ch_VolDelay, x
+	and #$0F
+	bne :+
+	lda var_ch_VolDelay, x
+	and #$F0
+	beq :+
+	lsr a
+	sta var_ch_VolColumn, x
+	lda #$00
+	sta var_ch_VolDelay, x
+:
+	lda var_ch_VolDelay, x
 	cmp #$10
 	bcc :+
 	sbc #$10
 	sta var_ch_VolDelay, x
-:	; ;; ;;;
+:
+	; ;; ;;;
 
 	inx
 	;cpx #WAVE_CHANS		; Skip DPCM
@@ -448,17 +463,10 @@ ft_read_note:
 	;sta var_ch_Transpose, x
 :
 .endif
-	lda var_ch_VolSlide, x				;;; ;; ;
-	bne :+
-	lda var_ch_VolDelay, x
-	beq :+
-	cmp #$10
-	bcs :+
+
 	lda var_ch_VolDefault, x
 	sta var_ch_VolColumn, x
-	lda #$00
-	sta var_ch_VolDelay, x				; ;; ;;;
-:
+
 .if .defined(USE_DPCM)
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM

@@ -401,10 +401,12 @@ ft_read_note:
 :
 	;;; ;; ; Echo buffer access
 	cmp #$70
-	bmi @NoEcho
+	bcc @NoEcho
 	and #$0F							; sec; sbc #$70
-	beq :++								; first echo
-	sta var_Temp ; = echo index
+	bne :+								; first echo
+	txa									; for the tax below
+	bpl :+++							; always, unless there are more than 0x80 channels
+:	sta var_Temp ; = echo index
 	txa
 	clc
 :	adc #CHANNELS

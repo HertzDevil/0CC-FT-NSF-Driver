@@ -209,6 +209,7 @@ var_ch_ModEffRateLo:	.res 1
 var_ch_ModEffWritten:	.res 1
 var_ch_ResetMod:       	.res 1
 var_ch_FDSVolume:		.res 1		;;; ;; ;
+var_ch_ModBias:			.res 1		;;; ;; ;
 var_Wave_pointer:		.res 2
 .endif
 

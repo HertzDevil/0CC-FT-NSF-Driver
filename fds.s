@@ -75,7 +75,8 @@ ft_init_fds:
 	lda #$FF					;;; ;; ;
 	sta $408A
 	lda #$80
-	sta var_ch_FDSVolume		; ;; ;;;
+	sta var_ch_FDSVolume
+	sta var_ch_ModBias			; ;; ;;;
 	rts
 
 ; Update FDS
@@ -150,10 +151,7 @@ ft_update_fds:
 	ora #$80
 	sta $4084								; Store modulation depth
 
-	lda var_ch_ModRate						; Modulation freq
-	sta $4086
-	lda var_ch_ModRate + 1
-	sta $4087
+	jsr ft_check_fds_fm
 
 @Return:
 	rts
@@ -238,3 +236,58 @@ ft_check_fds_effects:
 	sta var_ch_ModEffWritten
 
 	rts
+
+ft_check_fds_fm:
+	lda var_ch_ModRate + 1					;;; ;; ;
+	bmi @AutoFM
+	lda var_ch_ModRate						; Modulation freq
+	sta $4086
+	lda var_ch_ModRate + 1
+	sta $4087
+	rts
+@AutoFM:
+	lda var_ch_ModRate + 1
+	and #$7F
+	sta var_Temp
+	lda var_ch_ModRate + 0
+	sta AUX
+	lda var_ch_PeriodCalcHi + FDS_OFFSET
+	sta var_Temp16 + 1
+	lda var_ch_PeriodCalcLo + FDS_OFFSET
+	sta var_Temp16
+	lda #$00
+	sta ACC
+	sta ACC + 1
+	sta AUX + 1
+
+	; var_Temp16 * var_Temp -> ACC
+	ldy #$08
+@MultStep:
+	lda var_Temp
+	lsr a
+	sta var_Temp
+	bcc :+
+	clc
+	lda ACC
+	adc var_Temp16
+	sta ACC
+	lda ACC + 1
+	adc var_Temp16 + 1
+	bcs @Overflow
+	sta ACC + 1
+:   asl var_Temp16
+	rol var_Temp16 + 1
+	dey
+	bne @MultStep
+	beq @DoneMult ; always
+@Overflow:
+	lda #$FF
+	sta ACC
+	sta ACC + 1
+@DoneMult:
+	jsr DIV
+	lda ACC
+	sta $4086
+	lda ACC + 1
+	sta $4087
+	rts 

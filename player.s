@@ -735,14 +735,18 @@ ft_command_table:
 	.word ft_cmd_groove
 	.word ft_cmd_delayed_volume
 	.word ft_cmd_transpose				; ;; ;;;
+.if .defined(USE_VRC7)
+	;.word ft_cmd_vrc7_patch_change
+.endif
 .if .defined(USE_FDS)
 	.word ft_cmd_fds_mod_depth
 	.word ft_cmd_fds_mod_rate_hi
 	.word ft_cmd_fds_mod_rate_lo
 	.word ft_cmd_fds_volume
+	.word ft_cmd_fds_mod_bias
 .endif
-.if .defined(USE_VRC7)
-	;.word ft_cmd_vrc7_patch_change
+.if .defined(USE_N163)
+	.word ft_cmd_n163_wave_buffer
 .endif
 .if .defined(USE_S5B)		;;; ;; ;
 	.word ft_cmd_s5b_env_type
@@ -1002,19 +1006,11 @@ ft_cmd_duty:
 ; Effect: Sample offset
 ft_cmd_sample_offset:
 .if .defined(USE_DPCM)
-.if .defined(USE_N163)		;;; ;; ;
-.if .defined(USE_ALL)
-	cpx #DPCM_OFFSET
-.else
-	cpx var_EffChannels
-.endif
-	bne ft_cmd_n163_offset
-.endif
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCM_Offset
 	jmp ft_read_note
 .endif
-ft_cmd_n163_offset:
+ft_cmd_n163_wave_buffer:
 .ifdef USE_N163
 	jsr ft_get_pattern_byte
 	beq :+
@@ -1114,18 +1110,50 @@ ft_cmd_dpcm_pitch:
 .if .defined(USE_FDS)
 ft_cmd_fds_mod_depth:
 	jsr ft_get_pattern_byte
+	bmi @AutoFM					;;; ;; ;
 	sta var_ch_ModEffDepth
 	lda var_ch_ModEffWritten
 	ora #$01
 	sta var_ch_ModEffWritten
 	jmp ft_read_note
+@AutoFM:
+	sta var_Temp
+	lda var_ch_ModRate + 1
+	bpl :+
+	lda var_Temp ; using auto-fm
+	ora #$80
+	sta var_ch_ModRate + 1
+:	jmp ft_read_note			; ;; ;;;
 ft_cmd_fds_mod_rate_hi:
 	jsr ft_get_pattern_byte
+	sta var_Temp
+	and #$F0					;;; ;; ;
+	bne @AutoFM
 	sta var_ch_ModEffRateHi
 	lda var_ch_ModEffWritten
 	ora #$02
 	sta var_ch_ModEffWritten
+.if 0
+	lda var_ch_ModRate + 1
+	bpl :+
+	lda #$00
+	sta var_ch_ModRate
+	sta var_ch_ModRate + 1
+:
+.endif
 	jmp ft_read_note
+@AutoFM:
+	lsr a
+	lsr a
+	lsr a
+	lsr a
+	ora #$80
+	sta var_ch_ModRate + 1
+	lda var_Temp
+	and #$0F
+	sta var_ch_ModRate
+	inc var_ch_ModRate
+	jmp ft_read_note			; ;; ;;;
 ft_cmd_fds_mod_rate_lo:
 	jsr ft_get_pattern_byte
 	sta var_ch_ModEffRateLo
@@ -1136,6 +1164,10 @@ ft_cmd_fds_mod_rate_lo:
 ft_cmd_fds_volume:		;;; ;; ;
 	jsr ft_get_pattern_byte
 	sta var_ch_FDSVolume
+	jmp ft_read_note	; ;; ;;;
+ft_cmd_fds_mod_bias:
+	jsr ft_get_pattern_byte
+	sta var_ch_ModBias
 	jmp ft_read_note	; ;; ;;;
 .endif
 

@@ -149,7 +149,7 @@ ft_update_fds:
 	sta var_ch_ModRate
 	lda var_ch_ModInstRate + 1
 	sta var_ch_ModRate + 1					; ;; ;;;
-:
+:	jsr ft_check_fds_effects
 
 	lda var_ch_ModDelayTick					; Modulation delay
 	bne @TickDownDelay

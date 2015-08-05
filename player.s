@@ -38,10 +38,6 @@ ft_music_play:
 .endif
 	bne @ChanLoop
 
-.if .defined(USE_FDS)
-	jsr ft_check_fds_effects
-.endif
-
 	; Speed division
 	lda var_Tempo_Accum + 1
 	bmi ft_do_row_update				; Counter < 0
@@ -104,10 +100,6 @@ ft_read_channels:
 .endif
 
 	bne ft_read_channels
-
-.if .defined(USE_FDS)
-	jsr ft_check_fds_effects
-.endif
 
 	; Should jump?
 	lda var_Jump
@@ -1120,18 +1112,16 @@ ft_cmd_fds_mod_rate_hi:
 	sta var_Temp
 	and #$F0					;;; ;; ;
 	bne @AutoFM
+	lda var_Temp
 	sta var_ch_ModEffRate + 1
 	lda var_ch_ModEffWritten
 	ora #$02
 	sta var_ch_ModEffWritten
-.if 0
 	lda var_ch_ModRate + 1
 	bpl :+
 	lda #$00
 	sta var_ch_ModRate
-	sta var_ch_ModRate + 1
 :
-.endif
 	jmp ft_read_note
 @AutoFM:
 	lsr a
@@ -1151,7 +1141,11 @@ ft_cmd_fds_mod_rate_lo:
 	lda var_ch_ModEffWritten
 	ora #$04
 	sta var_ch_ModEffWritten
-	jmp ft_read_note
+	lda var_ch_ModRate + 1
+	bpl :+
+	lda #$00
+	sta var_ch_ModRate + 1
+:	jmp ft_read_note
 ft_cmd_fds_volume:		;;; ;; ;
 	jsr ft_get_pattern_byte
 	sta var_ch_FDSVolume

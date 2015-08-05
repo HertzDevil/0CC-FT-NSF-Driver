@@ -204,10 +204,10 @@ var_ch_ModDepth:		.res 1
 var_ch_ModRate:			.res 2
 var_ch_ModDelayTick:	.res 1
 var_ch_ModEffDepth:		.res 1
-var_ch_ModEffRateHi:	.res 1
-var_ch_ModEffRateLo:	.res 1
+var_ch_ModEffRate:		.res 2
+var_ch_ModInstDepth:	.res 1		;;; ;; ;
+var_ch_ModInstRate:		.res 2		;;; ;; ;
 var_ch_ModEffWritten:	.res 1
-var_ch_ResetMod:       	.res 1
 var_ch_FDSVolume:		.res 1		;;; ;; ;
 var_ch_ModBias:			.res 1		;;; ;; ;
 var_Wave_pointer:		.res 2

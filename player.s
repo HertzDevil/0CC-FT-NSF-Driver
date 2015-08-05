@@ -484,24 +484,15 @@ ft_read_note:
 	jmp @ResetSlide
 :	; VRC7 skip
 .endif
-.if .defined(USE_FDS)
-	lda ft_channel_type, x
-	cmp #CHAN_FDS
-	bne :+
-	lda #$01
-	sta var_ch_ResetMod
-:
-.endif
+.if 0
 .if .defined(USE_N163)					;;; ;; ;
 	lda ft_channel_type, x
 	cmp #CHAN_N163
 	bne :+
 	;jsr ft_n163_load_wave2
-	nop
-	nop
-	nop
 :
 .endif									; ;; ;;;
+.endif
 	jsr ft_reset_instrument
 	lda #$00
 	sta var_ch_State, x
@@ -1129,7 +1120,7 @@ ft_cmd_fds_mod_rate_hi:
 	sta var_Temp
 	and #$F0					;;; ;; ;
 	bne @AutoFM
-	sta var_ch_ModEffRateHi
+	sta var_ch_ModEffRate + 1
 	lda var_ch_ModEffWritten
 	ora #$02
 	sta var_ch_ModEffWritten
@@ -1156,7 +1147,7 @@ ft_cmd_fds_mod_rate_hi:
 	jmp ft_read_note			; ;; ;;;
 ft_cmd_fds_mod_rate_lo:
 	jsr ft_get_pattern_byte
-	sta var_ch_ModEffRateLo
+	sta var_ch_ModEffRate + 0
 	lda var_ch_ModEffWritten
 	ora #$04
 	sta var_ch_ModEffWritten

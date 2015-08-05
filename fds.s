@@ -28,12 +28,12 @@ ft_load_instrument_fds:
 	sta var_ch_ModDelay
 	lda (var_Temp_Pointer), y	; Modulation depth
 	iny
-	sta var_ch_ModDepth
+	sta var_ch_ModInstDepth		;;; ;; ; keep state
 	lda (var_Temp_Pointer), y	; Modulation freq low
 	iny
-	sta var_ch_ModRate
+	sta var_ch_ModInstRate
 	lda (var_Temp_Pointer), y	; Modulation freq high
-	sta var_ch_ModRate + 1
+	sta var_ch_ModInstRate + 1
 
 	pla							; Get wave index
 	jsr ft_load_fds_wave
@@ -89,8 +89,9 @@ ft_update_fds:
 @Play:
 
 	lda var_ch_Note + FDS_OFFSET
-	beq @KillFDS
-
+	bne :+ ; branch
+	jmp @KillFDS
+:
 	; Calculate volume
 	lda var_ch_VolColumn + FDS_OFFSET		; Kill channel if volume column = 0
 	lsr a
@@ -135,11 +136,17 @@ ft_update_fds:
 	lda var_ch_PeriodCalcLo + FDS_OFFSET
 	sta $4082	; Low
 
-	lda var_ch_ResetMod
+	lda var_ch_Trigger + FDS_OFFSET			;;; ;; ;
 	beq :+
-	lda #$00
-	sta $4085
-	sta var_ch_ResetMod
+	jsr ft_reset_modtable
+	;lda #$00
+	;sta $4085
+	lda var_ch_ModInstDepth					;;; ;; ;
+	sta var_ch_ModDepth
+	lda var_ch_ModInstRate
+	sta var_ch_ModRate
+	lda var_ch_ModInstRate + 1
+	sta var_ch_ModRate + 1					; ;; ;;;
 :
 
 	lda var_ch_ModDelayTick					; Modulation delay
@@ -223,13 +230,13 @@ ft_check_fds_effects:
 	and #$02
 	beq :+
 	; FDS modulation rate high
-	lda var_ch_ModEffRateHi
+	lda var_ch_ModEffRate + 1
 	sta var_ch_ModRate + 1
 :   lda var_ch_ModEffWritten
 	and #$04
 	beq :+
 	; FDS modulation rate low
-	lda var_ch_ModEffRateLo
+	lda var_ch_ModEffRate + 0
 	sta var_ch_ModRate + 0
 :
 	lda #$00

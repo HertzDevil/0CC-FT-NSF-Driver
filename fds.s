@@ -143,6 +143,8 @@ ft_update_fds:
 	;sta $4085
 	lda var_ch_ModInstDepth					;;; ;; ;
 	sta var_ch_ModDepth
+	lda var_ch_ModRate + 1
+	bmi :+
 	lda var_ch_ModInstRate
 	sta var_ch_ModRate
 	lda var_ch_ModInstRate + 1

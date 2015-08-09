@@ -496,6 +496,12 @@ ft_SkipToRow:
 	sta var_Pattern_Pos
 	ldx #$00							; x = channel
 @ChannelLoop:
+.if .defined(USE_BANKSWITCH)			;;; ;; ; perform bankswitching
+	lda var_ch_Bank, x
+	beq :+
+	jsr ft_bankswitch
+:
+.endif									; ;; ;;;
 	lda var_Pattern_Pos
 	sta var_Temp2						; Restore row count
 	lda #$00

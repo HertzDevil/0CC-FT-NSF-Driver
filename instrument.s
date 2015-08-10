@@ -545,8 +545,6 @@ ft_load_instrument_2a03:
 	load_inst var_ch_SeqHiPitch, var_ch_SequencePtr4
 	load_inst var_ch_SeqDutyCycle, var_ch_SequencePtr5
 
-	ldy var_Temp
-
 .ifndef USE_FDS
 ft_load_instrument_fds:
 .endif
@@ -557,6 +555,7 @@ ft_load_instrument_vrc7:
 ft_load_instrument_n163:
 .endif
 
+	ldy var_Temp		;;; ;; ;
 	rts
 
 ; Make sure the period doesn't exceed max or min

@@ -204,12 +204,11 @@ ft_load_fds_wave:
 	; Write wave
 	lda #$80
 	sta $4089		; Enable wave RAM
-	ldy #$00
+	ldy #$3F		; optimization
 :	lda (var_Temp16), y	          	; 5
 	sta $4040, y					; 5
-	iny								; 2
-	cpy #$40						; 2
-	bne :-							; 3 = 17 cycles and 64 iterations = 1088 cycles
+	dey								; 2
+	bpl :-							; 3 = 15 cycles and 64 iterations = 960 cycles
 	lda #$00
 	sta $4089		; Disable wave RAM
 	rts

@@ -492,6 +492,7 @@ ft_load_frame:
 ;
 ; Skip to a certain row, this is NOT recommended in songs when CPU time is critical!!
 ;
+;;; ;; ; various optimizations
 ft_SkipToRow:
 	sta var_Pattern_Pos
 	ldx #$00							; x = channel
@@ -502,23 +503,40 @@ ft_SkipToRow:
 	jsr ft_bankswitch
 :
 .endif									; ;; ;;;
+	lda #$FF
+	sta var_Temp3
 	lda var_Pattern_Pos
 	sta var_Temp2						; Restore row count
 	lda #$00
 	sta var_ch_NoteDelay, x
-
-@RowLoop:
-	ldy #$00
+	tay
 	lda var_ch_PatternAddrLo, x
 	sta var_Temp_Pattern
 	lda var_ch_PatternAddrHi, x
 	sta var_Temp_Pattern + 1
 
-@ReadNote:
+@RowLoop:
+
 	lda var_ch_NoteDelay, x				; First check if in the middle of a row delay
 	beq @NoRowDelay
-	dec var_ch_NoteDelay, x				; Decrease one
-	jmp @RowIsDone
+	lda var_Temp2
+	sec
+	sbc var_ch_NoteDelay, x
+	bcc :+
+	pha
+	lda #$00
+	sta var_ch_NoteDelay, x
+	pla
+	sta var_Temp2
+	bne @NoRowDelay
+	beq @Finished
+:	lda var_ch_NoteDelay, x
+	sec
+	sbc var_Temp2
+	sta var_ch_NoteDelay, x
+	lda #$00
+	sta var_Temp2
+	jmp @Finished
 
 @NoRowDelay:
 	; Read a row
@@ -527,18 +545,27 @@ ft_SkipToRow:
 
 	lda var_ch_DefaultDelay, x
 	cmp #$FF
-	bne @LoadDefaultDelay
+	bne :+
 	iny
 	lda (var_Temp_Pattern), y
-	iny
-
-	sta var_ch_NoteDelay, x
-	jmp @RowIsDone
-@LoadDefaultDelay:
-	iny
+:	iny
 	sta var_ch_NoteDelay, x				; Store default delay
-@RowIsDone:
+
 	; Save the new address
+	tya
+	bpl :+								; defer as many additions as possible
+	clc
+	adc var_Temp_Pattern
+	sta var_Temp_Pattern
+	lda #$00
+	tay
+	adc var_Temp_Pattern + 1
+	sta var_Temp_Pattern + 1
+:
+	dec var_Temp2						; Next row
+	bne @RowLoop
+
+@Finished:
 	clc
 	tya
 	adc var_Temp_Pattern
@@ -546,11 +573,10 @@ ft_SkipToRow:
 	lda #$00
 	adc var_Temp_Pattern + 1
 	sta var_ch_PatternAddrHi, x
-
-	dec var_Temp2						; Next row
-	bne @RowLoop
-
-	inx									; Next channel
+	lda var_Temp3
+	bmi :+
+	jsr ft_load_instrument
+:	inx									; Next channel
 .if .defined(USE_ALL)		;;; ;; ;
 	cpx #CHANNELS
 .elseif .defined(USE_N163)
@@ -558,8 +584,9 @@ ft_SkipToRow:
 .else
 	cpx #CHANNELS
 .endif
-	bne @ChannelLoop
-	lda #$00
+	beq :+
+	jmp @ChannelLoop
+:	lda #$00
 	sta var_SkipTo
 	rts
 
@@ -570,47 +597,43 @@ ft_SkipToRow:
 	beq @EffectDuration
 	cmp #$84
 	beq @EffectNoDuration
-	pha
+	cmp #$F0							; See if volume
+	bcs @OneByteCommand
+	cmp #$E0							; See if a quick instrument command
+	bcs @LoadInst
 	cmp #$8E
 	beq @OneByteCommand
 	cmp #$92
 	beq @OneByteCommand
 	cmp #$A2
 	beq @OneByteCommand
-	and #$F0
-	cmp #$F0							; See if volume
-	beq @OneByteCommand
-	cmp #$E0							; See if a quick instrument command
-	beq @LoadInst
 	iny									; Command takes two bytes
 @OneByteCommand:						; Command takes one byte
 	iny
-	pla
-	jmp @ReadNote						; A new command or note is immediately following
+	jmp @NoRowDelay						; A new command or note is immediately following
 @EffectDuration:
 	iny
 	lda (var_Temp_Pattern), y
 	iny
 	sta var_ch_DefaultDelay, x
-	jmp @ReadNote
+	jmp @NoRowDelay
 @EffectNoDuration:
 	iny
 	lda #$FF
 	sta var_ch_DefaultDelay, x
-	jmp @ReadNote
+	jmp @NoRowDelay
 @LoadInstCmd:    ; mult-byte
 	iny
 	lda (var_Temp_Pattern), y
 	iny
-	jsr ft_load_instrument
-	jmp @ReadNote
+	sta var_Temp3
+	jmp @NoRowDelay
 @LoadInst:       ; single byte
 	iny
-	pla
 	and #$0F
 	asl a
-	jsr ft_load_instrument
-	jmp @ReadNote
+	sta var_Temp3
+	jmp @NoRowDelay						;;; ;; ; var_ch_NoteDelay remains unaltered
 
 .else   ; ENABLE_ROW_SKIP
 	rts

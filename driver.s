@@ -10,11 +10,11 @@
 ;
 ;
 ; ToDo;
-;  - Sunsoft
-;  - Support for multiple chips
-;
+;  - Confirm all chip combinations work
+;  - Optimize code for Dxx effect
 ;
 ; Known bugs:
+;  - Txy does not work properly during a Qxy / Rxy effect
 ;
 
 

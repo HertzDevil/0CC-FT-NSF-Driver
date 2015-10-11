@@ -237,7 +237,7 @@ ft_skip_row_update:
 .endif
 	jsr ft_instrument_release
 @BeginTranspose:
-	lda var_ch_Transpose, x
+	lda var_ch_Transpose, x				;;; ;; ;
 	beq @DoneTranspose
 	bmi @Negative
 	sec
@@ -246,12 +246,8 @@ ft_skip_row_update:
 	bpl @DoneTranspose					; else var_ch_Transpose, x == #$Fx
 	and #$0F
 	clc
-	adc var_ch_Note, x
-	sta var_ch_Note, x
-	sta var_ch_EchoBuffer, x			;;; ;; ;
-	jsr ft_translate_freq_only
-	lda #$00
-	sta var_ch_Transpose, x
+	jsr ft_clear_transpose
+;	jmp @DoneTranspose
 	beq @DoneTranspose					; always
 @Negative:
 	sec
@@ -260,12 +256,7 @@ ft_skip_row_update:
 	bmi @DoneTranspose					; else var_ch_Transpose, x == #$7x
 	eor #$8F
 	sec
-	adc var_ch_Note, x
-	sta var_ch_Note, x
-	sta var_ch_EchoBuffer, x			;;; ;; ;
-	jsr ft_translate_freq_only
-	lda #$00
-	sta var_ch_Transpose, x
+	jsr ft_clear_transpose
 @DoneTranspose:
 	lda var_ch_VolDelay, x
 	beq :+
@@ -1204,7 +1195,7 @@ ft_cmd_s5b_env_rate_lo:
 ;
 
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
-ft_load_freq_table:		;;; ;; ; uniform
+ft_load_freq_table:
 	pha
 	lda ft_channel_type, x
 .if .defined(USE_N163)
@@ -1245,8 +1236,18 @@ ft_load_freq_table:		;;; ;; ; uniform
 	lda #>ft_periods_ntsc
 	sta var_Note_Table + 1
 	pla
-	rts					; ;; ;;;
-.endif							; ;; ;;;
+	rts
+.endif									; ;; ;;;
+
+ft_clear_transpose:						;;; ;; ;
+	adc var_ch_Note, x
+	sta var_ch_Note, x
+	sta var_ch_EchoBuffer, x
+	jsr ft_translate_freq_only
+	lda #$00
+	sta var_ch_Transpose, x
+;	sta var_ch_Effect, x
+	rts									; ;; ;;;
 
 ;
 ; Translate the note in A to a frequency and stores in current channel

@@ -985,25 +985,6 @@ ft_cmd_sample_offset:
 	sta var_ch_DPCM_Offset
 	jmp ft_read_note
 .endif
-ft_cmd_n163_wave_buffer:
-.ifdef USE_N163
-	jsr ft_get_pattern_byte
-	beq :+
-	sbc #$01
-	asl a
-	sta var_ch_WavePos - N163_OFFSET, x
-	lda var_ch_WaveLen - N163_OFFSET, x
-	ora #$80
-	sta var_ch_WaveLen - N163_OFFSET, x
-	bmi :++		; always
-:	lda var_ch_WaveLen - N163_OFFSET, x
-	and #$7F
-	sta var_ch_WaveLen - N163_OFFSET, x
-	lda var_ch_WavePosOld - N163_OFFSET, x
-	sta var_ch_WavePos - N163_OFFSET, x
-:	jsr ft_n163_load_wave2
-	jmp ft_read_note
-.endif						; ;; ;;;
 ; Effect: Slide pitch up
 ft_cmd_slide_up:
 	jsr ft_get_pattern_byte			; Fetch speed / note
@@ -1156,6 +1137,26 @@ ft_cmd_vrc7_patch_change:
 	sta var_ch_vrc7_Patch - VRC7_OFFSET, x
 	jmp ft_read_note
 .endif
+
+; N163
+.if .defined(USE_N163)		;;; ;; ;
+ft_cmd_n163_wave_buffer:
+	jsr ft_get_pattern_byte
+	bmi :+
+	asl a
+	sta var_ch_WavePos - N163_OFFSET, x
+	lda var_ch_WaveLen - N163_OFFSET, x
+	ora #$80
+	sta var_ch_WaveLen - N163_OFFSET, x
+	bmi :++		; always
+:	lda var_ch_WaveLen - N163_OFFSET, x
+	and #$7F
+	sta var_ch_WaveLen - N163_OFFSET, x
+	lda var_ch_WavePosOld - N163_OFFSET, x
+	sta var_ch_WavePos - N163_OFFSET, x
+:	jsr ft_n163_load_wave2
+	jmp ft_read_note
+.endif						; ;; ;;;
 
 ; S5B
 .if .defined(USE_S5B)		;;; ;; ;

@@ -267,8 +267,6 @@ ft_skip_row_update:
 	lda #$00
 	sta var_ch_Transpose, x
 @DoneTranspose:
-	lda var_ch_VolSlide, x
-	bne :+
 	lda var_ch_VolDelay, x
 	beq :+
 	cmp #$10
@@ -456,8 +454,11 @@ ft_read_note:
 :
 .endif
 
+	lda var_ch_VolSlide, x
+	bne :+
 	lda var_ch_VolDefault, x
 	sta var_ch_VolColumn, x
+:
 
 .if .defined(USE_DPCM)
 	lda ft_channel_type, x		;;; ;; ;

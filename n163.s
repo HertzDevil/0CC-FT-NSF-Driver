@@ -9,7 +9,7 @@ ft_load_instrument_n163:
 	sta var_ch_WaveLen - N163_OFFSET, x
 	iny
 	lda (var_Temp_Pointer), y
-	sta var_ch_WavePos - N163_OFFSET, x
+	;sta var_ch_WavePos - N163_OFFSET, x
 	sta var_ch_WavePosOld - N163_OFFSET, x		;;; ;; ;
 	iny
 .if .defined(RELOCATE_MUSIC)

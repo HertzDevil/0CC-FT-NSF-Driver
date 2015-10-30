@@ -9,13 +9,15 @@ ft_update_mmc5:
 	sta $5015
 	rts
 :	ldx #$00
-	ldy #$00
 @ChannelLoop:		; MMC5 pulse channels
 	lda var_ch_Note + MMC5_OFFSET, x		; Kill channel if note = off
 	bne :+									; branch
 	jmp @KillChannel
 	; Calculate volume
-:	lda var_ch_LengthCounter + MMC5_OFFSET, x	;;; ;; ;
+:	lda var_ch_DutyCycle + MMC5_OFFSET, x
+	and #$03
+	sta var_Temp2
+	lda var_ch_LengthCounter + MMC5_OFFSET, x	;;; ;; ;
 	and #$01
 	beq :+
 	lda var_ch_VolColumn + MMC5_OFFSET, x	; do not automatically kill channel when hardware envelope is enabled
@@ -24,11 +26,6 @@ ft_update_mmc5:
 	ora var_ch_Volume + MMC5_OFFSET, x
 	tay
 	lda ft_volume_table, y					; ignore tremolo
-	pha										; compatibility
-	lda var_ch_DutyCycle + MMC5_OFFSET, x
-	and #$03
-	sta var_Temp2		;;; ;; ;
-	pla
 	bpl @DoneVolume							; always ; ;; ;;;
 :	lda var_ch_VolColumn + MMC5_OFFSET, x	; Kill channel if volume column = 0
 	asl a
@@ -41,9 +38,6 @@ ft_update_mmc5:
 	ora var_Temp
 	tay
 	; Write to registers
-	lda var_ch_DutyCycle + MMC5_OFFSET, x
-	and #$03
-	sta var_Temp2		;;; ;; ;
 	lda ft_volume_table, y
 	sec
 	sbc var_ch_TremoloResult + MMC5_OFFSET, x
@@ -70,7 +64,7 @@ ft_update_mmc5:
 	asl a
 	asl a
 	ora var_Temp							; ;; ;;;
-	sta $5000, y
+	sta $5000, y ; y == 0 || y == 4
 	iny
 	iny
 	; Period table isn't limited to $7FF anymore
@@ -82,7 +76,7 @@ ft_update_mmc5:
 	lda #$FF
 	sta var_ch_PeriodCalcLo + MMC5_OFFSET, x
 :	lda var_ch_PeriodCalcLo + MMC5_OFFSET, x
-	sta $5000, y
+	sta $5000, y ; y == 2 || y == 6
 	iny
 	lda var_ch_LengthCounter + MMC5_OFFSET, x	;;; ;; ;
 	and #$03
@@ -105,10 +99,11 @@ ft_update_mmc5:
 	jmp @Next
 @KillChannel:
 	lda #$30
-	sta $5000, y
-	tya
-	adc #$04
-	tay
+	cpx #$01
+	beq :+
+	sta $5000
+	bne @Next ; always
+:	sta $5004
 @Next:
 	inx
 	cpx #CH_COUNT_MMC5

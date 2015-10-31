@@ -53,256 +53,153 @@ ft_update_apu:
 	sta $4017
 	rts
 @Play:
-
+	ldx #$00
+	ldy #$00
 ; ==============================================================================
-;  Square 1
+;  Square 1 / 2
 ; ==============================================================================
-	lda var_Channels
-	and #$01
+@Square:
+	lda bit_mask, x
+	and var_Channels
 	bne :+
-	jmp @Square2
-:	lda var_ch_Note				; Kill channel if note = off
+	jmp @DoneSquare
+:	lda var_ch_Note, x			; Kill channel if note = off
 	bne :+						; branch
-	jmp @KillSquare1
+	jmp @KillSquare
 :
 
 	; Calculate volume
 .if 0
 	ldx #$00
 	jsr ft_get_volume
-	beq @KillSquare1
+	beq @KillSquare
 .endif
 	; Calculate volume
-	lda var_ch_LengthCounter + APU_PU1	;;; ;; ;
+	lda var_ch_LengthCounter + APU_OFFSET, x	;;; ;; ;
 	and #$01
 	beq :+
-	lda var_ch_VolColumn + APU_PU1		; do not automatically kill channel when hardware envelope is enabled
+	lda var_ch_VolColumn + APU_OFFSET, x		; do not automatically kill channel when hardware envelope is enabled
 	asl a
 	and #$F0
-	ora var_ch_Volume + APU_PU1
-	tax
-	lda ft_volume_table, x				; ignore tremolo
-	bpl @DoneVolumeSquare1				; always ; ;; ;;;
-:	lda var_ch_VolColumn + APU_PU1		; Kill channel if volume column = 0
+	ora var_ch_Volume + APU_OFFSET, x
+	tay
+	lda ft_volume_table, y						; ignore tremolo
+	bpl @DoneVolumeSquare						; always ; ;; ;;;
+:	lda var_ch_VolColumn + APU_OFFSET, x		; Kill channel if volume column = 0
 	asl a
-	beq @KillSquare1
-	and #$F0
-	sta var_Temp
-	lda var_ch_Volume + APU_PU1
-	beq @KillSquare1
-	ora var_Temp
-	tax
-	lda ft_volume_table, x
-	sec
-	sbc var_ch_TremoloResult
-	bpl :+
-	lda #$00
-:   bne :+
-	lda var_ch_VolColumn + APU_PU1
-	beq :+
-	lda #$01
-:
-@DoneVolumeSquare1:
-	; Write to registers
-	pha
-	lda var_ch_DutyCycle + APU_PU1
-	and #$03
-	tax
-	pla
-	ora ft_duty_table, x				; Add volume
-	sta var_Temp						;;; ;; ; allow length counter and envelope
-	lda var_ch_LengthCounter + APU_PU1
-	and #$03
-	eor #$03
-	asl a
-	asl a
-	asl a
-	asl a
-	ora var_Temp						; ;; ;;;
-	sta $4000
-	; Period table isn't limited to $7FF anymore
-	lda var_ch_PeriodCalcHi + APU_PU1
-	and #$F8
-	beq @TimerOverflow1
-	lda #$07
-	sta var_ch_PeriodCalcHi + APU_PU1
-	lda #$FF
-	sta var_ch_PeriodCalcLo + APU_PU1
-@TimerOverflow1:
-
-	lda var_ch_Sweep + APU_PU1			; Check if sweep is active
-	beq @NoSquare1Sweep
-	and #$80
-	beq @Square2						; See if sweep is triggered, if then don't touch sound registers until next note
-
-	lda var_ch_Sweep + APU_PU1			; Trigger sweep
-	sta $4001
-	and #$7F
-	sta var_ch_Sweep + APU_PU1
-
-	jsr @KillSweepUnit
-
-	lda var_ch_PeriodCalcLo + APU_PU1
-	sta $4002
-	lda var_ch_PeriodCalcHi + APU_PU1
-	sta $4003
-	lda #$FF
-	sta var_ch_PrevFreqHigh + APU_PU1
-
-	jmp @Square2
-
-@KillSquare1:
-	lda #$30
-	sta $4000
-	jmp @Square2
-
-@NoSquare1Sweep:						; No Sweep
-	lda #$08
-	sta $4001
-	;jsr @KillSweepUnit					; test
-	lda var_ch_PeriodCalcLo + APU_PU1
-	sta $4002
-	lda var_ch_LengthCounter + APU_PU1	;;; ;; ;
-	and #$03
-	beq :+
-	lda var_ch_Trigger + APU_PU1
-	beq @SkipHighPartSq1
-	bne :++
-:	lda var_ch_PeriodCalcHi + APU_PU1
-	cmp var_ch_PrevFreqHigh + APU_PU1
-	beq @SkipHighPartSq1
-	sta var_ch_PrevFreqHigh + APU_PU1
-:	lda var_ch_LengthCounter + APU_PU1
-	and #$F8
-	ora var_ch_PeriodCalcHi + APU_PU1
-	sta $4003							; ;; ;;;
-@SkipHighPartSq1:
-;	jmp @Square2
-
-; ==============================================================================
-;  Square 2
-; ==============================================================================
-@Square2:
-	lda var_Channels
-	and #$02
 	bne :+
-	jmp @Triangle
-:	lda var_ch_Note + APU_PU2
-	bne :+								; branch
-	jmp @KillSquare2
-:
-
-	; Calculate volume
-.if 0
-	ldx #$01
-	jsr ft_get_volume
-	beq @KillSquare2
-.endif
-
-	lda var_ch_LengthCounter + APU_PU2	;;; ;; ;
-	and #$01
-	beq :+
-	lda var_ch_VolColumn + APU_PU2		; do not automatically kill channel when hardware envelope is enabled
-	asl a
-	and #$F0
-	ora var_ch_Volume + APU_PU2
-	tax
-	lda ft_volume_table, x				; ignore tremolo
-	bpl @DoneVolumeSquare2				; always ; ;; ;;;
-:	lda var_ch_VolColumn + APU_PU2		; Kill channel if volume column = 0
-	asl a
-	beq @KillSquare2
-	and #$F0
+	jmp @KillSquare
+:	and #$F0
 	sta var_Temp
-	lda var_ch_Volume + APU_PU2
-	beq @KillSquare2
-	ora var_Temp
-	tax
-	lda ft_volume_table, x
+	lda var_ch_Volume + APU_OFFSET, x
+	bne :+
+	jmp @KillSquare
+:	ora var_Temp
+	tay
+	lda ft_volume_table, y
 	sec
-	sbc var_ch_TremoloResult + APU_PU2
+	sbc var_ch_TremoloResult + APU_OFFSET, x
 	bpl :+
 	lda #$00
 :   bne :+
-	lda var_ch_VolColumn + APU_PU2
+	lda var_ch_VolColumn + APU_OFFSET, x
 	beq :+
 	lda #$01
 :
-@DoneVolumeSquare2:
+@DoneVolumeSquare:
 	; Write to registers
 	pha
-	lda var_ch_DutyCycle + APU_PU2
+	lda var_ch_DutyCycle + APU_OFFSET, x
 	and #$03
-	tax
+	tay
 	pla
-	ora ft_duty_table, x
-	sta var_Temp		;;; ;; ;
-	lda var_ch_LengthCounter + APU_PU2
+	ora ft_duty_table, y						; Add volume
+	sta var_Temp								;;; ;; ; allow length counter and envelope
+	txa
+	asl a
+	asl a
+	tay
+	lda var_ch_LengthCounter + APU_OFFSET, x
 	and #$03
 	eor #$03
 	asl a
 	asl a
 	asl a
 	asl a
-	ora var_Temp		; ;; ;;;
-	sta $4004
+	ora var_Temp								; ;; ;;;
+	sta $4000, y
+	iny
 	; Period table isn't limited to $7FF anymore
-	lda var_ch_PeriodCalcHi + APU_PU2
+	lda var_ch_PeriodCalcHi + APU_OFFSET, x
 	and #$F8
-	beq @TimerOverflow2
+	beq :+
 	lda #$07
-	sta var_ch_PeriodCalcHi + APU_PU2
+	sta var_ch_PeriodCalcHi + APU_OFFSET, x
 	lda #$FF
-	sta var_ch_PeriodCalcLo + APU_PU2
-@TimerOverflow2:
-
-	lda var_ch_Sweep + APU_PU2			; Check if there should be sweep
-	beq @NoSquare2Sweep
+	sta var_ch_PeriodCalcLo + APU_OFFSET, x
+:
+	lda var_ch_Sweep + APU_OFFSET, x			; Check if sweep is active
+	beq @NoSquareSweep
 	and #$80
-	beq @Triangle						; See if sweep is triggered
-	
-	lda var_ch_Sweep + APU_PU2			; Trigger sweep
-	sta $4005
+	beq @DoneSquare								; See if sweep is triggered, if then don't touch sound registers until next note
+
+	lda var_ch_Sweep + APU_OFFSET, x			; Trigger sweep
+	sta $4000, y
+	iny
 	and #$7F
-	sta var_ch_Sweep + APU_PU2
+	sta var_ch_Sweep + APU_OFFSET, x
 
 	jsr @KillSweepUnit
 
-	lda var_ch_PeriodCalcLo + APU_PU2	; Could this be done by that below? I don't know
-	sta $4006
-	lda var_ch_PeriodCalcHi + APU_PU2
-	sta $4007
+	lda var_ch_PeriodCalcLo + APU_OFFSET, x
+	sta $4000, y
+	iny
+	lda var_ch_PeriodCalcHi + APU_OFFSET, x
+	sta $4000, y
 	lda #$FF
-	sta var_ch_PrevFreqHigh + APU_PU2
+	sta var_ch_PrevFreqHigh + APU_OFFSET, x
 
-	jmp @Triangle
+	jmp @DoneSquare
 
-@KillSquare2:
-	lda #$30
-	sta $4004
-	jmp @Triangle
-
-@NoSquare2Sweep:				; No Sweep
+@NoSquareSweep:									; No Sweep
 	lda #$08
-	sta $4005
-	;jsr @KillSweepUnit					; test
-	lda var_ch_PeriodCalcLo + APU_PU2
-	sta $4006
-	lda var_ch_LengthCounter + APU_PU2	;;; ;; ;
+	sta $4000, y
+	iny
+	;jsr @KillSweepUnit							; test
+	lda var_ch_PeriodCalcLo + APU_OFFSET, x
+	sta $4000, y
+	iny
+	lda var_ch_LengthCounter + APU_OFFSET, x	;;; ;; ;
 	and #$03
 	beq :+
-	lda var_ch_Trigger + APU_PU2
-	beq @SkipHighPartSq2
+	lda var_ch_Trigger + APU_OFFSET, x
+	beq @DoneSquare
 	bne :++
-:	lda var_ch_PeriodCalcHi + APU_PU2
-	cmp var_ch_PrevFreqHigh + APU_PU2
-	beq @SkipHighPartSq2
-	sta var_ch_PrevFreqHigh + APU_PU2
-:	lda var_ch_LengthCounter + APU_PU2
+:	lda var_ch_PeriodCalcHi + APU_OFFSET, x
+	cmp var_ch_PrevFreqHigh + APU_OFFSET, x
+	beq @DoneSquare
+	sta var_ch_PrevFreqHigh + APU_OFFSET, x
+:	lda var_ch_LengthCounter + APU_OFFSET, x
 	and #$F8
-	ora var_ch_PeriodCalcHi + APU_PU2
-	sta $4007							; ;; ;;;
-@SkipHighPartSq2:
+	ora var_ch_PeriodCalcHi + APU_OFFSET, x
+	sta $4000, y								; ;; ;;;
+	jmp @DoneSquare
+	
+@KillSquare:
+	lda #$30
+	sta $4000, y
+
+@DoneSquare:
+	inx
+	cpx #$02
+	bcs :+
+	ldy #$04
+	;txa
+	;asl a
+	;asl a
+	;tay
+	jmp @Square
+:
 
 ; ==============================================================================
 ;  Triangle

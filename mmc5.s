@@ -82,15 +82,12 @@ ft_update_mmc5:
 	and #$03
 	beq :+
 	lda var_ch_Trigger + MMC5_OFFSET, x
-	bne :+++
-	iny
-	bne @Next ; always
+	bne :++
+	beq @Next ; always
 :	lda var_ch_PeriodCalcHi + MMC5_OFFSET, x
 	cmp var_ch_PrevFreqHighMMC5, x
-	bne :+
-	iny
-	bne @Next ; always
-:	sta var_ch_PrevFreqHighMMC5, x
+	beq @Next ; always
+	sta var_ch_PrevFreqHighMMC5, x
 :	lda var_ch_LengthCounter + MMC5_OFFSET, x
 	and #$F8
 	ora var_ch_PeriodCalcHi + MMC5_OFFSET, x
@@ -108,5 +105,6 @@ ft_update_mmc5:
 	inx
 	cpx #CH_COUNT_MMC5
 	bcs :+
+	ldy #$04
 	jmp @ChannelLoop
 :	rts

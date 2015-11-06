@@ -353,6 +353,8 @@ var_ch_SequencePtr2:	.res SFX_WAVE_CHANS
 var_ch_SequencePtr3:	.res SFX_WAVE_CHANS
 var_ch_SequencePtr4:	.res SFX_WAVE_CHANS
 var_ch_SequencePtr5:	.res SFX_WAVE_CHANS
+var_ch_InstType:		.res SFX_WAVE_CHANS			;;; ;; ; Chip type, used for duty conversion
+													; ;; ;;; valid since chip type = inst type right now
 
 ;var_ch_fixed:			.res SFX_WAVE_CHANS
 
@@ -384,6 +386,15 @@ last_bss_var:			.res 1						; Not used
 
 
 .segment "CODE"
+
+.macro padjmp count
+.local @end
+	jmp @end
+.repeat count
+	nop
+.endrep
+@end:
+.endmacro
 
 ; NSF entry addresses
 

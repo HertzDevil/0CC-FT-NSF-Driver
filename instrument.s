@@ -535,6 +535,9 @@ ft_load_inst_pointers:		;;; ;; ; 0CC: optimize this
 ; Load 2A03 instrument
 ft_load_instrument_2a03:
 	; Read instrument data, var_Temp_Pointer points to instrument data
+	lda (var_Temp_Pointer), y		;;; ;; ; instrument type
+	sta var_ch_InstType, x
+	iny								; ;; ;;;
 	lda (var_Temp_Pointer), y		; sequence switch
 	sta var_Temp3
 	iny

@@ -9,7 +9,7 @@ VRC7_HOLD_NOTE  = $80
 
 ft_load_instrument_vrc7:
 	; Read VRC7 instrument
-	ldy #$00
+	ldy #$01									;;; ;; ; skip inst type
 	lda (var_Temp_Pointer), y		            ; Load patch number
 	sta var_ch_vrc7_Patch - VRC7_OFFSET, x		; vrc7 channel offset
 	sta var_ch_vrc7_DefPatch - VRC7_OFFSET, x
@@ -18,7 +18,7 @@ ft_load_instrument_vrc7:
 	; Store path to custom patch settings
 	clc
 	lda var_Temp_Pointer
-	adc #$01
+	adc #$02									;;; ;; ; skip one
 	sta var_ch_vrc7_CustomLo - VRC7_OFFSET, x
 	lda var_Temp_Pointer + 1
 	adc #$00

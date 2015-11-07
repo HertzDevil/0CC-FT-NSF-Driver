@@ -5,6 +5,8 @@
 ; Load N163 instrument
 ft_load_instrument_n163:
 	ldy #$00
+	jsr ft_load_instrument_2a03
+	ldy var_Temp2
 	lda (var_Temp_Pointer), y
 	sta var_ch_WaveLen - N163_OFFSET, x
 	iny
@@ -39,7 +41,6 @@ ft_load_instrument_n163:
 	; Load N163 wave
 ;    jsr ft_n163_load_wave
 :   sta var_NamcoInstrument, x
-	jsr ft_load_instrument_2a03
 	jsr ft_n163_load_wave2
 	ldy var_Temp
 	rts

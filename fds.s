@@ -3,10 +3,13 @@
 ft_load_instrument_fds:
 	; Read FDS instrument
 	ldy #$00
-	lda (var_Temp_Pointer), y	; Load wave index
-	iny
-	pha
+	jsr ft_load_instrument_2a03	;;; ;; ; load sequences first
+	ldy var_Temp2
 
+	tya							;;; ;; ;
+	clc
+	adc #$10
+	sta var_Temp2				; ;; ;;;
 	; Load modulation table
 	jsr ft_reset_modtable
 :
@@ -20,8 +23,8 @@ ft_load_instrument_fds:
 	lsr a
 	sta $4088
 	iny
-	cpy #$11
-	bne :-
+	cpy var_Temp2				;;; ;; ;
+	bcc :-
 
 	lda (var_Temp_Pointer), y	; Modulation delay
 	iny
@@ -34,13 +37,12 @@ ft_load_instrument_fds:
 	sta var_ch_ModInstRate
 	lda (var_Temp_Pointer), y	; Modulation freq high
 	sta var_ch_ModInstRate + 1
+	iny							;;; ;; ;
 
-	pla							; Get wave index
+	lda (var_Temp_Pointer), y	; Load wave index
 	jsr ft_load_fds_wave
-
-	; Finish by loading sequences
-	ldy #$15
-	jmp ft_load_instrument_2a03
+	ldy var_Temp
+	rts							;;; ;; ;
 
 ft_fds_volume:
 	lda var_Temp				; 5x4 multiplication

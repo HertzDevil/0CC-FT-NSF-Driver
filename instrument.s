@@ -547,6 +547,7 @@ ft_load_instrument_2a03:
 	load_inst var_ch_SeqPitch, var_ch_SequencePtr3
 	load_inst var_ch_SeqHiPitch, var_ch_SequencePtr4
 	load_inst var_ch_SeqDutyCycle, var_ch_SequencePtr5
+	sty var_Temp2		;;; ;; ;
 
 .ifndef USE_FDS
 ft_load_instrument_fds:

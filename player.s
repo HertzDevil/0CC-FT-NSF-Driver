@@ -499,15 +499,8 @@ ft_read_note:
 	cpx #CHAN_S5B
 	beq @ResetSlide
 .endif				; ;; ;;;
-	lda var_ch_DutyCycle, x
-	and #$F0
-	sta var_ch_DutyCycle, x
-	lsr a
-	lsr a
-	lsr a
-	lsr a
-	ora var_ch_DutyCycle, x
-	sta var_ch_DutyCycle, x
+	lda var_ch_DutyDefault, x
+	sta var_ch_DutyCurrent, x
 
 @ResetSlide:
 	; Clear the slide effect on new notes
@@ -952,24 +945,8 @@ ft_cmd_dac:
 ; Effect: Duty cycle (Vxx)
 ft_cmd_duty:
 	jsr ft_get_pattern_byte
-.ifdef USE_S5B		;;; ;; ;
-	pha
-	lda ft_channel_type, x
-	cmp #CHAN_S5B
-	bne :+
-	pla
-	sta var_ch_5B_Duty - S5B_OFFSET, x
-	jmp ft_read_note
-:	pla
-.endif				; ;; ;;;
-	sta var_ch_DutyCycle, x	; xxxxyyyy: xxxx = default value, yyyy = current value
-	clc
-	asl a
-	asl a
-	asl a
-	asl a
-	ora var_ch_DutyCycle, x
-	sta var_ch_DutyCycle, x
+	sta var_ch_DutyCurrent, x		;;; ;; ;
+	sta var_ch_DutyDefault, x
 .if .defined(USE_N163)
 	lda ft_channel_type, x
 	cmp #CHAN_N163

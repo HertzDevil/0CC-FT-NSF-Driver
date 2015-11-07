@@ -84,7 +84,7 @@ CH_COUNT_FDS  = 1 * .defined(USE_FDS)
 CH_COUNT_S5B  = 3 * .defined(USE_S5B)
 CH_COUNT_VRC7 = 6 * .defined(USE_VRC7)
 
-APU_OFFSET = 0
+APU_OFFSET  = 0
 MMC5_OFFSET = CH_COUNT_2A03 + APU_OFFSET
 VRC6_OFFSET = CH_COUNT_MMC5 + MMC5_OFFSET
 N163_OFFSET = CH_COUNT_VRC6 + VRC6_OFFSET
@@ -236,7 +236,6 @@ var_Pul_Noi:			.res 1						; $07
 var_EnvelopeRate:		.res 2						; $0B, $0C
 var_EnvelopeType:		.res 1						; $0D
 var_ch_5B_Env_Enable:	.res CH_COUNT_S5B			; 0x10 on, 0x00 off
-var_ch_5B_Duty:			.res CH_COUNT_S5B			; noise mode value due to Vxx, overridden by instrument settings
 .endif												; ;; ;;;
 
 last_zp_var:			.res 1						; Not used
@@ -347,7 +346,8 @@ var_ch_SeqPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 3: Pitch bend
 var_ch_SeqHiPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 4: High speed pitch bend
 var_ch_SeqDutyCycle:	.res SFX_WAVE_CHANS * 2		; Sequence 5: Duty cycle / Noise Mode
 var_ch_Volume:			.res SFX_WAVE_CHANS			; Output volume
-var_ch_DutyCycle:		.res SFX_WAVE_CHANS			; Duty cycle / Noise mode
+var_ch_DutyDefault:		.res SFX_WAVE_CHANS			;;; ;; ; Duty cycle / Noise mode
+var_ch_DutyCurrent:		.res SFX_WAVE_CHANS			; ;; ;;; do not rely on bitwise operations
 var_ch_SequencePtr1:	.res SFX_WAVE_CHANS			; Index pointers for sequences
 var_ch_SequencePtr2:	.res SFX_WAVE_CHANS
 var_ch_SequencePtr3:	.res SFX_WAVE_CHANS

@@ -242,7 +242,7 @@ ft_run_instrument:
 	; Duty cycle/noise mode
 	;
 	lda var_ch_SeqDutyCycle + SFX_WAVE_CHANS, x
-	beq @5BOverwrite		;;; ;; ;
+	beq @SkipDutyUpdate
 	sta var_Temp_Pointer + 1
 	lda var_ch_SeqDutyCycle, x
 	sta var_Temp_Pointer
@@ -251,23 +251,12 @@ ft_run_instrument:
 	beq @SkipDutyUpdate
 	jsr ft_run_sequence
 	sta var_ch_SequencePtr5, x
-.if .defined(USE_S5B)		;;; ;; ;
-	lda ft_channel_type, x
-	cmp #CHAN_S5B
-	bne :+
+@ConvertDuty:		;;; ;; ;
 	lda var_sequence_result
-	sta var_ch_DutyCycle, x
-	jmp @SkipDutyUpdate
-:
-.endif				; ;; ;;;
+
+; ;; ;;;
 	lda var_sequence_result
-	pha
-	lda var_ch_DutyCycle, x
-	and #$F0
-	sta var_ch_DutyCycle, x
-	pla
-	ora var_ch_DutyCycle, x
-	sta var_ch_DutyCycle, x
+	sta var_ch_DutyCurrent, x
 .if .defined(USE_N163)
 	lda ft_channel_type, x
 	cmp #CHAN_N163
@@ -276,14 +265,6 @@ ft_run_instrument:
 :
 .endif
 	; Save pitch
-@5BOverwrite:
-.if .defined(USE_S5B)		;;; ;; ;
-	lda ft_channel_type, x
-	cmp #CHAN_S5B
-	bne @SkipDutyUpdate
-	lda var_ch_5B_Duty - S5B_OFFSET, x
-	sta var_ch_DutyCycle, x
-.endif
 @SkipDutyUpdate:
 	rts
 
@@ -498,6 +479,7 @@ ft_load_instrument:
 	lda (var_Temp16), y
 	adc ft_music_addr + 1
 	sta var_Temp_Pointer + 1
+	dey		;;; ;; ;
 .else
 	lda (var_Temp16), y
 	sta var_Temp_Pointer
@@ -508,7 +490,8 @@ ft_load_instrument:
 
 	; Jump to the instrument setup routine
 ;    ldy var_Temp
-	lda ft_channel_type, x
+	lda (var_Temp_Pointer), y			;;; ;; ;
+	;lda ft_channel_type, x
 	asl		;;; ;; ;
 	tay
 	lda ft_load_inst_pointers, y

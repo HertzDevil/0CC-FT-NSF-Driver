@@ -14,7 +14,7 @@ ft_update_mmc5:
 	bne :+									; branch
 	jmp @KillChannel
 	; Calculate volume
-:	lda var_ch_DutyCycle + MMC5_OFFSET, x
+:	lda var_ch_DutyCurrent + MMC5_OFFSET, x
 	and #$03
 	sta var_Temp2
 	lda var_ch_LengthCounter + MMC5_OFFSET, x	;;; ;; ;

@@ -36,7 +36,8 @@ ft_load_instrument_n163:
 	cmp var_Temp3
 	beq :+
 	lda #$00             ; reset wave
-	sta var_ch_DutyCycle, x
+	sta var_ch_DutyDefault, x
+	sta var_ch_DutyCurrent, x
 	lda var_Temp3
 	; Load N163 wave
 ;    jsr ft_n163_load_wave
@@ -260,8 +261,7 @@ ft_n163_load_wave2:
 	sta $F800
 
 	; Get wave index
-	lda var_ch_DutyCycle, x
-	and #$0F
+	lda var_ch_DutyCurrent, x
 	sta var_Temp3
 	beq :++
 :   lda var_ch_WaveLen - N163_OFFSET, x		;;; ;; ; Multiply wave index with wave len

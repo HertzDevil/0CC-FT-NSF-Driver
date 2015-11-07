@@ -4,9 +4,9 @@
 
 ft_init_s5b:
 	lda #$40
-	sta var_ch_5B_Duty
-	sta var_ch_5B_Duty + 1
-	sta var_ch_5B_Duty + 2
+	sta var_ch_DutyDefault + S5B_OFFSET
+	sta var_ch_DutyDefault + S5B_OFFSET + 1
+	sta var_ch_DutyDefault + S5B_OFFSET + 2
 	lda #$07
 	sta $C000
 	lda #%00111000
@@ -31,11 +31,11 @@ ft_update_s5b:
 :
 	ldx #$00
 @UpdateDuty:
-	lda var_ch_DutyCycle + S5B_OFFSET, x
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	bpl :+									; no noise
 	and #$1F
 	sta var_Noise_Period
-:	lda var_ch_DutyCycle + S5B_OFFSET, x
+:	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	and #$20								; E
 	lsr
 	sta var_ch_5B_Env_Enable, x
@@ -45,7 +45,7 @@ ft_update_s5b:
 
 	ldx #$00
 @UpdateToneMask:
-	lda var_ch_DutyCycle + S5B_OFFSET, x
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	and #$40
 	beq :+
 	lda var_Pul_Noi
@@ -63,7 +63,7 @@ ft_update_s5b:
 
 	ldx #$00
 @UpdateNoiseMask:
-	lda var_ch_DutyCycle + S5B_OFFSET, x
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	bpl :+
 	lda var_Pul_Noi
 	eor #$FF

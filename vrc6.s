@@ -28,7 +28,7 @@ ft_update_vrc6:
 	lda var_ch_Volume + VRC6_OFFSET, x		; Kill channel if volume = 0
 	cpx #$02
 	bne :+
-	ora var_ch_DutyCycle + VRC6_OFFSET, x
+	ora var_ch_DutyCurrent + VRC6_OFFSET, x
 :	beq @KillChan
 	cpx #$02
 	bne :+
@@ -48,8 +48,8 @@ ft_update_vrc6:
 
 	; Pulse width
 	pha
-	lda var_ch_DutyCycle + VRC6_OFFSET, x
-	and #$0F
+	lda var_ch_DutyCurrent + VRC6_OFFSET, x
+	and #$07
 	tay
 	pla
 

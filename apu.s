@@ -109,7 +109,7 @@ ft_update_apu:
 @DoneVolumeSquare:
 	; Write to registers
 	pha
-	lda var_ch_DutyCycle + APU_OFFSET, x
+	lda var_ch_DutyCurrent + APU_OFFSET, x
 	and #$03
 	tay
 	pla
@@ -313,7 +313,7 @@ ft_update_apu:
 	sta $400C
 	lda #$00
 	sta $400D
-	lda var_ch_DutyCycle + APU_NOI
+	lda var_ch_DutyCurrent + APU_NOI
 ;	and #$01
 	ror a
 	ror a

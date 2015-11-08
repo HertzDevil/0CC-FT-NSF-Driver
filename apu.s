@@ -464,6 +464,11 @@ ft_duty_table:
 	.byte $40 * i
 .endrep
 
+ft_duty_2a03_to_vrc6:
+	.byte $01, $03, $07, $03
+ft_duty_vrc6_to_2a03:
+	.byte $00, $00, $01, $01, $01, $01, $02, $02
+
 ; Volume table: (column volume) * (instrument volume)
 ft_volume_table:
 .repeat 16, xx

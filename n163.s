@@ -6,7 +6,15 @@
 ft_load_instrument_n163:
 	ldy #$00
 	jsr ft_load_instrument_2a03
-	ldy var_Temp2
+	lda ft_channel_type, x	;;; ;; ; non-N163 instruments do not affect wave
+	cmp #CHAN_N163
+	beq :+
+	lda var_Temp2
+	clc
+	adc #$04
+	tay
+	bne :++					; ;; ;;; always
+:	ldy var_Temp2
 	lda (var_Temp_Pointer), y
 	sta var_ch_WaveLen - N163_OFFSET, x
 	iny
@@ -32,7 +40,7 @@ ft_load_instrument_n163:
 	sta var_ch_WavePtrHi - N163_OFFSET, x
 	iny
 .endif
-	lda var_NamcoInstrument, x
+:	lda var_NamcoInstrument, x
 	cmp var_Temp3
 	beq :+
 	lda #$00             ; reset wave
@@ -63,14 +71,16 @@ ft_init_n163:
 	; Clear wave ram
 	lda #$80
 	sta $F800
-	ldx #$40
+	ldx #$7E ;
 	lda #$00
 :   sta $4800
 	dex
 	bne :-
 	ldx #$07
-	lda #$00
-:   sta var_ch_N163_LastHiFreq, x
+:	lda #$00
+	sta var_ch_N163_LastHiFreq, x
+	lda #$01				;;; ;; ;
+	sta var_ch_WaveLen, x
 	dex
 	bpl :-
 
@@ -239,6 +249,15 @@ ft_update_n163:
    rts
 
 ft_n163_load_wave2:
+	lda var_ch_InstType, x				;;; ;; ;
+	cmp #CHAN_N163
+	beq :+
+	rts
+:										; ;; ;;;
+.if .defined(USE_S5B)		;;; ;; ;
+	lda #$0E
+	sta $C000
+.endif						; ;; ;;;
 
 	tya
 	pha

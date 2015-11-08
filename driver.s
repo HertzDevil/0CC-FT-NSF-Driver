@@ -123,7 +123,7 @@ CHANNELS	= DPCM_OFFSET + .defined(USE_DPCM)
 	CHAN_SAW	; used
 	CHAN_VRC7	; used
 	CHAN_FDS	; used
-	CHAN_MMC5
+	CHAN_MMC5	; used
 	CHAN_N163	; used
 	CHAN_S5B 	; used
 .endenum		; ;; ;;;

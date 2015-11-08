@@ -252,10 +252,50 @@ ft_run_instrument:
 	jsr ft_run_sequence
 	sta var_ch_SequencePtr5, x
 @ConvertDuty:		;;; ;; ;
+	lda ft_channel_type, x
+	cmp #CHAN_VRC6
+	beq @ToVRC6
+;	cmp #CHAN_N163
+;	beq @ToN163
+	cmp #CHAN_S5B
+	beq @ToS5B
+	cmp #CHAN_MMC5
+	beq :+
+	cmp #CHAN_2A03
+	bne @NoConvert
+:
+	ldy var_sequence_result
+	lda var_ch_InstType, x
+	cmp #CHAN_S5B
+	bne :+
+	lda #$02
+	bpl @DoneConvert ; always
+:	cmp #CHAN_VRC6
+	bne :+
+	lda ft_duty_vrc6_to_2a03, y
+	bpl @DoneConvert ; always
+:	jmp @NoConvert
+@ToVRC6:
+	ldy var_sequence_result
+	lda var_ch_InstType, x
+	cmp #CHAN_S5B
+	bne :+
+	lda #$07
+	bpl @DoneConvert ; always
+:	cmp #CHAN_2A03
+	bne :+
+	lda ft_duty_2a03_to_vrc6, y
+	bpl @DoneConvert ; always
+:	jmp @NoConvert
+@ToS5B:
+	lda var_ch_InstType, x
+	cmp #CHAN_S5B
+	beq @NoConvert
+	lda #$40
+	bpl @DoneConvert ; always
+@NoConvert:
 	lda var_sequence_result
-
-; ;; ;;;
-	lda var_sequence_result
+@DoneConvert:		; ;; ;;;
 	sta var_ch_DutyCurrent, x
 .if .defined(USE_N163)
 	lda ft_channel_type, x

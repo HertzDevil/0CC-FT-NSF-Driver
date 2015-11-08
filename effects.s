@@ -622,6 +622,7 @@ ft_vibrato:
 	beq @Inverted
 	cmp #CHAN_VRC7
 	beq @Inverted
+	padjmp 6
 	cmp #CHAN_FDS
 	beq @Inverted
 .endif
@@ -630,6 +631,7 @@ ft_vibrato:
 	sec
 	lda var_ch_PeriodCalcLo, x
 	sbc var_Temp16
+	padjmp 4
 	sta var_ch_PeriodCalcLo, x
 	lda var_ch_PeriodCalcHi, x
 	sbc var_Temp16 + 1
@@ -648,6 +650,7 @@ ft_vibrato:
 
 ; Tremolo calculation
 ;
+	padjmp 2
 ft_tremolo:
 	lda var_ch_TremoloSpeed, x
 	bne @DoTremolo

@@ -50,8 +50,11 @@ ft_load_instrument_n163:
 	; Load N163 wave
 ;    jsr ft_n163_load_wave
 :   sta var_NamcoInstrument, x
+	lda ft_channel_type, x	;;; ;; ;
+	cmp #CHAN_N163
+	bne :+					; ;; ;;;
 	jsr ft_n163_load_wave2
-	ldy var_Temp
+:	ldy var_Temp
 	rts
 
 ft_init_n163:

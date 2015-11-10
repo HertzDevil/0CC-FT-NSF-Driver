@@ -162,32 +162,22 @@ ft_load_slide:
 :
 .endif
 	sta var_ch_Effect, x
+
+	; Work-around for noise
+	lda ft_channel_type, x		;;; ;; ;
 .if .defined(USE_N163)
-	lda ft_channel_type, x
-	cmp #CHAN_N163
+	cpx #CHAN_N163
+	beq @Invert
+.endif
+	cpx #CHAN_NOI
 	bne :++
-	asl var_ch_EffParam, x
-	asl var_ch_EffParam, x
-	; Invert
+@Invert:
 	lda var_ch_Effect, x
 	cmp #EFF_SLIDE_UP
 	beq :+
 	lda #EFF_SLIDE_UP
 	sta var_ch_Effect, x
 	jmp ft_jump_to_effect
-:   lda #EFF_SLIDE_DOWN
-	sta var_ch_Effect, x
-:
-.endif
-	; Work-around for noise
-	cpx #$03
-	bne :++
-	cmp #EFF_SLIDE_UP
-	beq :+
-	lda #EFF_SLIDE_UP
-	sta var_ch_Effect, x
-	jmp ft_jump_to_effect
-
 ;    rts
 :   lda #EFF_SLIDE_DOWN
 	sta var_ch_Effect, x
@@ -623,13 +613,11 @@ ft_vibrato:
 
 .if .defined(USE_N163)
 	lda ft_channel_type, x
-	padjmp 7
 	cmp #CHAN_N163
 	bne @SkipN163
 	asl var_Temp16        ; Multiply by 16
 	rol var_Temp16 + 1
 	asl var_Temp16
-	padjmp 4
 	rol var_Temp16 + 1
 	asl var_Temp16
 	rol var_Temp16 + 1
@@ -640,17 +628,18 @@ ft_vibrato:
 
 .if EXPANSION_FLAG		;;; ;; ;
 	lda ft_channel_type, x
+	padjmp 7
 	cmp #CHAN_N163
 	beq @Inverted
 	cmp #CHAN_VRC7
 	beq @Inverted
 	cmp #CHAN_FDS
+	padjmp 4
 	beq @Inverted
 .endif
 
 	  ; TODO use ft_period_remove
 	sec
-	padjmp 6
 	lda var_ch_PeriodCalcLo, x
 	sbc var_Temp16
 	sta var_ch_PeriodCalcLo, x
@@ -663,6 +652,7 @@ ft_vibrato:
 	clc
 	lda var_ch_PeriodCalcLo, x
 	adc var_Temp16
+	padjmp 6
 	sta var_ch_PeriodCalcLo, x
 	lda var_ch_PeriodCalcHi, x
 	adc var_Temp16 + 1

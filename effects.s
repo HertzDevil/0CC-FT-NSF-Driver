@@ -383,7 +383,17 @@ ft_portamento_down:
 :	jmp ft_post_effects
 
 ft_period_add:
-	;;; ;; ;
+.if .defined(USE_N163)
+    lda ft_channel_type, x
+    cmp #CHAN_N163
+    bne :+
+    ; Multiply by 4
+    asl var_Temp16
+    rol var_Temp16 + 1
+    asl var_Temp16
+    rol var_Temp16 + 1
+:
+.endif
 	clc
 	lda var_ch_TimerPeriodLo, x
 	adc var_Temp16
@@ -397,7 +407,17 @@ ft_period_add:
 	sta var_ch_TimerPeriodHi, x
 :   rts
 ft_period_remove:
-	;;; ;; ;
+.if .defined(USE_N163)
+    lda ft_channel_type, x
+    cmp #CHAN_N163
+    bne :+
+    ; Multiply by 4
+    asl var_Temp16
+    rol var_Temp16 + 1
+    asl var_Temp16
+    rol var_Temp16 + 1
+:
+.endif
 	sec
 	lda var_ch_TimerPeriodLo, x
 	sbc var_Temp16
@@ -603,11 +623,13 @@ ft_vibrato:
 
 .if .defined(USE_N163)
 	lda ft_channel_type, x
+	padjmp 7
 	cmp #CHAN_N163
 	bne @SkipN163
 	asl var_Temp16        ; Multiply by 16
 	rol var_Temp16 + 1
 	asl var_Temp16
+	padjmp 4
 	rol var_Temp16 + 1
 	asl var_Temp16
 	rol var_Temp16 + 1
@@ -622,16 +644,15 @@ ft_vibrato:
 	beq @Inverted
 	cmp #CHAN_VRC7
 	beq @Inverted
-	padjmp 6
 	cmp #CHAN_FDS
 	beq @Inverted
 .endif
 
 	  ; TODO use ft_period_remove
 	sec
+	padjmp 6
 	lda var_ch_PeriodCalcLo, x
 	sbc var_Temp16
-	padjmp 4
 	sta var_ch_PeriodCalcLo, x
 	lda var_ch_PeriodCalcHi, x
 	sbc var_Temp16 + 1
@@ -650,7 +671,6 @@ ft_vibrato:
 
 ; Tremolo calculation
 ;
-	padjmp 2
 ft_tremolo:
 	lda var_ch_TremoloSpeed, x
 	bne @DoTremolo

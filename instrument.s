@@ -297,6 +297,8 @@ ft_run_instrument:
 	lda var_sequence_result
 @DoneConvert:		; ;; ;;;
 	sta var_ch_DutyCurrent, x
+	; Save pitch
+@SkipDutyUpdate:
 .if .defined(USE_N163)
 	lda ft_channel_type, x
 	cmp #CHAN_N163
@@ -304,8 +306,6 @@ ft_run_instrument:
 	jsr ft_n163_load_wave2
 :
 .endif
-	; Save pitch
-@SkipDutyUpdate:
 	rts
 
 

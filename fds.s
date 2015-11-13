@@ -1,11 +1,6 @@
 ; Takes care of the FDS registers
 
-ft_load_instrument_fds:
-	; Read FDS instrument
-	ldy #$00
-	jsr ft_load_instrument_2a03	;;; ;; ; load sequences first
-	ldy var_Temp2
-
+ft_load_inst_extra_fds:
 	tya							;;; ;; ;
 	clc
 	adc #$10

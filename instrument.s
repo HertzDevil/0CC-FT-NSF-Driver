@@ -529,34 +529,15 @@ ft_load_instrument:
 .endif
 
 	; Jump to the instrument setup routine
-;    ldy var_Temp
-	lda (var_Temp_Pointer), y			;;; ;; ;
-	;lda ft_channel_type, x
-	asl		;;; ;; ;
-	tay
-	lda ft_load_inst_pointers, y
-	sta var_Temp16
-	iny
-	lda ft_load_inst_pointers, y
-	sta var_Temp16 + 1
-	ldy #$00
-	jmp (var_Temp16)
-
-ft_load_inst_pointers:		;;; ;; ; 0CC: optimize this
-	.word ft_load_instrument_2a03	; 2A03
-	.word ft_load_instrument_2a03	; TRI
-	.word ft_load_instrument_2a03	; NOI
-	.word ft_load_instrument_2a03	; DPCM
-	.word ft_load_instrument_2a03	; VRC6
-	.word ft_load_instrument_2a03	; SAW
-	.word ft_load_instrument_vrc7	; VRC7
-	.word ft_load_instrument_fds	; FDS
-	.word ft_load_instrument_2a03	; MMC5
-	.word ft_load_instrument_n163	; N163
-	.word ft_load_instrument_2a03	;;; ;; ; S5B
+	;;; ;; ; only vrc7 does not use sequence instrument
+	lda ft_channel_type, x
+	cmp #CHAN_VRC7
+	bne :+
+	jmp ft_load_instrument_vrc7
+:	; continue
 
 ; Load 2A03 instrument
-ft_load_instrument_2a03:
+; ft_load_instrument_2a03:
 	; Read instrument data, var_Temp_Pointer points to instrument data
 	lda (var_Temp_Pointer), y		;;; ;; ; instrument type
 	sta var_ch_InstType, x
@@ -570,16 +551,24 @@ ft_load_instrument_2a03:
 	load_inst var_ch_SeqPitch, var_ch_SequencePtr3
 	load_inst var_ch_SeqHiPitch, var_ch_SequencePtr4
 	load_inst var_ch_SeqDutyCycle, var_ch_SequencePtr5
-	sty var_Temp2		;;; ;; ;
 
-.ifndef USE_FDS
-ft_load_instrument_fds:
+.if .defined(USE_FDS) || .defined(USE_N163)		;;; ;; ;
+	lda var_ch_InstType, x
+.if .defined(USE_FDS)
+	cmp #CHAN_FDS
+	bne :+
+	jmp ft_load_inst_extra_fds
+:
 .endif
+.if .defined(USE_N163)
+	cmp #CHAN_N163
+	bne :+
+	jmp ft_load_inst_extra_n163
+:
+.endif
+.endif											; ;; ;;;
 .ifndef USE_VRC7
 ft_load_instrument_vrc7:
-.endif
-.ifndef USE_N163
-ft_load_instrument_n163:
 .endif
 
 	ldy var_Temp		;;; ;; ;

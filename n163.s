@@ -3,19 +3,16 @@
 ;
 
 ; Load N163 instrument
-ft_load_instrument_n163:
-	ldy #$00
-	jsr ft_load_instrument_2a03
+ft_load_inst_extra_n163:
 	lda ft_channel_type, x	;;; ;; ; non-N163 instruments do not affect wave
 	cmp #CHAN_N163
 	beq :+
-	lda var_Temp2
+	tya
 	clc
 	adc #$04
 	tay
 	bne :++					; ;; ;;; always
-:	ldy var_Temp2
-	lda (var_Temp_Pointer), y
+:	lda (var_Temp_Pointer), y
 	sta var_ch_WaveLen - N163_OFFSET, x
 	iny
 	lda (var_Temp_Pointer), y

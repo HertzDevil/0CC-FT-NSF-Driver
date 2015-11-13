@@ -11,14 +11,23 @@ ft_load_inst_extra_n163:
 	clc
 	adc #$04
 	tay
-	bne :++					; ;; ;;; always
-:	lda (var_Temp_Pointer), y
+	bne @DoneParams ; always
+:	lda var_ch_WaveLen - N163_OFFSET, x
+	and #$80
+	ora (var_Temp_Pointer), y
 	sta var_ch_WaveLen - N163_OFFSET, x
+	bmi :+
 	iny
 	lda (var_Temp_Pointer), y
-	;sta var_ch_WavePos - N163_OFFSET, x
-	sta var_ch_WavePosOld - N163_OFFSET, x		;;; ;; ;
+	sta var_ch_WavePos - N163_OFFSET, x
+	sta var_ch_WavePosOld - N163_OFFSET, x
 	iny
+	jmp :++
+:	iny
+	lda (var_Temp_Pointer), y
+	sta var_ch_WavePosOld - N163_OFFSET, x
+	iny							; ;; ;;;
+:
 .if .defined(RELOCATE_MUSIC)
 	clc
 	lda (var_Temp_Pointer), y
@@ -37,7 +46,8 @@ ft_load_inst_extra_n163:
 	sta var_ch_WavePtrHi - N163_OFFSET, x
 	iny
 .endif
-:	lda var_NamcoInstrument, x
+@DoneParams:
+	lda var_NamcoInstrument, x
 	cmp var_Temp3
 	beq :+
 	lda #$00             ; reset wave

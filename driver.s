@@ -218,7 +218,7 @@ var_Wave_pointer:		.res 2
 ;var_ch_Wave:            .res 8
 var_ch_WavePtrLo:       .res CH_COUNT_N163
 var_ch_WavePtrHi:       .res CH_COUNT_N163
-var_ch_WaveLen:         .res CH_COUNT_N163			;;; ;; ; also used for N163 Yxx
+var_ch_WaveLen:         .res CH_COUNT_N163			;;; ;; ; MSB is used for N163 Yxx
 var_ch_WavePos:         .res CH_COUNT_N163
 var_ch_WavePosOld:      .res CH_COUNT_N163			;;; ;; ; overridden by Yxx
 

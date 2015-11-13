@@ -519,7 +519,6 @@ ft_load_instrument:
 	lda (var_Temp16), y
 	adc ft_music_addr + 1
 	sta var_Temp_Pointer + 1
-	dey		;;; ;; ;
 .else
 	lda (var_Temp16), y
 	sta var_Temp_Pointer
@@ -527,6 +526,7 @@ ft_load_instrument:
 	lda (var_Temp16), y
 	sta var_Temp_Pointer + 1
 .endif
+	dey		;;; ;; ;
 
 	; Jump to the instrument setup routine
 	;;; ;; ; only vrc7 does not use sequence instrument

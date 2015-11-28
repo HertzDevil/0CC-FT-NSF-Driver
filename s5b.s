@@ -98,11 +98,15 @@ ft_update_s5b:
 	adc #$08
 	sta $C000
 	lda var_ch_VolColumn + S5B_OFFSET, x
+	beq @StoreVolume
 	lsr a
 	lsr a
 	lsr a
+	sta var_Temp
+	lda var_ch_Volume + S5B_OFFSET, x
+	beq @StoreVolume
 	clc
-	adc var_ch_Volume + S5B_OFFSET, x
+	adc var_Temp
 	sec
 	sbc #$0F
 	sec
@@ -114,6 +118,7 @@ ft_update_s5b:
 	beq :+
 	lda #$01
 :
+@StoreVolume:
 	; Volume / envelope enable
 	ora var_ch_5B_Env_Enable, x
 	sta $E000

@@ -22,17 +22,15 @@ ft_update_vrc6:
 	; Load volume
 	lda var_ch_VolColumn + VRC6_OFFSET, x	; Kill channel if volume column = 0
 	asl a
-	beq @KillChan
-	and #$F0
+	bne :+
+	cpx #$02
+	bne @KillChan							; sawtooth does not kill
+:	and #$F0
 	sta var_Temp
 	lda var_ch_Volume + VRC6_OFFSET, x		; Kill channel if volume = 0
-	cpx #$02
 	bne :+
-	ora var_ch_DutyCurrent + VRC6_OFFSET, x
-:	beq @KillChan
 	cpx #$02
-	bne :+
-	lda var_ch_Volume + VRC6_OFFSET, x
+	bne @KillChan
 :	ora var_Temp
 	tay
 	lda ft_volume_table, y					; Load from the 16*16 volume table
@@ -40,7 +38,7 @@ ft_update_vrc6:
 	sbc var_ch_TremoloResult + VRC6_OFFSET, x
 	bpl :+
 	lda #$00
-:   bne :+
+:	bne :+
 	lda var_ch_VolColumn + VRC6_OFFSET, x
 	beq :+
 	lda #$01

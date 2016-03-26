@@ -980,7 +980,10 @@ ft_cmd_slide_down:
 ft_cmd_vol_slide:
 	jsr ft_get_pattern_byte			; Fetch speed / note
 	sta var_ch_VolSlide, x
-	jmp ft_read_note
+	bne :+							;;; ;; ;
+	lda var_ch_VolColumn, x
+	sta var_ch_VolDefault, x		; ;; ;;;
+:	jmp ft_read_note
 ; Effect: Note cut (Sxx)
 ft_cmd_note_cut:
 	jsr ft_get_pattern_byte

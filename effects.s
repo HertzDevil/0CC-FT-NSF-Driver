@@ -599,7 +599,6 @@ ft_vibrato:
 	rol var_Temp16 + 1
 	asl var_Temp16
 	rol var_Temp16 + 1
-	padjmp 6
 	asl var_Temp16
 	rol var_Temp16 + 1
 @SkipN163:   ; if (ft_channel_type, x != CHAN_N163)
@@ -608,7 +607,6 @@ ft_vibrato:
 .if EXPANSION_FLAG		;;; ;; ;
 	lda ft_channel_type, x
 	cmp #CHAN_N163
-	padjmp 5
 	beq @Inverted
 	cmp #CHAN_VRC7
 	beq @Inverted
@@ -626,8 +624,6 @@ ft_vibrato:
 	sta var_ch_PeriodCalcHi, x
 	rts
 
-	padjmp 2
-	padjmp 2
 @Inverted:
 	clc
 	lda var_ch_PeriodCalcLo, x

@@ -14,10 +14,13 @@ ft_run_instrument:
 	;
 	lda var_ch_SeqVolume + SFX_WAVE_CHANS, x	; High part of address = 0 mean sequence is disabled
 	beq @SkipVolumeUpdate
+	padjmp 2
+	padjmp 2
 	sta var_Temp_Pointer + 1
 	lda var_ch_SeqVolume, x					; Store the sequence address in a zp variable
 	sta var_Temp_Pointer
 	lda var_ch_SequencePtr1, x				; Sequence item index
+	padjmp 4
 	cmp #$FF
 	beq @SkipVolumeUpdate					; Skip if end is reached
 	jsr ft_run_sequence						; Run an item in the sequence
@@ -32,6 +35,7 @@ ft_run_instrument:
 	bne :+		;;; ;; ; too long ; ;; ;;;
 	jmp @SkipArpeggioUpdate
 :	sta var_Temp_Pointer + 1
+	padjmp 6
 	lda var_ch_SeqArpeggio, x
 	sta var_Temp_Pointer
 	lda var_ch_SequencePtr2, x

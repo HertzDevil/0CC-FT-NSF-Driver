@@ -295,6 +295,7 @@ ft_n163_load_wave2:
 	beq :++
 :   lda var_ch_WaveLen - N163_OFFSET, x		;;; ;; ; Multiply wave index with wave len
 	and #$7F
+	padjmp 6
 	clc
 	adc var_Temp_Pointer2
 	sta var_Temp_Pointer2

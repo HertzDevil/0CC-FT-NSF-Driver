@@ -388,7 +388,7 @@ last_bss_var:			.res 1						; Not used
 
 .segment "CODE"
 
-; $9000 - $9002
+; $9000 - $9003
 ; $9010
 ; $9030
 ; $A000 - $A002

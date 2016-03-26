@@ -532,16 +532,11 @@ ft_vibrato:
 	cmp #$30
 	bcc @Phase3
 	; Phase 4: - 15 - (Phase - 48) + depth
-	sec
-	sbc #$30
-	sta var_Temp
-	sec
-	lda #$0F
-	sbc var_Temp
-	ora var_ch_VibratoDepth, x
-	tay
-	lda ft_vibrato_table, y
+	eor #$3F
 	jmp @Negate
+@Phase2:
+	; Phase 2: 15 - (Phase - 16) + depth
+	eor #$1F
 @Phase1:
 	; Phase 1: Phase + depth
 	ora var_ch_VibratoDepth, x
@@ -551,41 +546,24 @@ ft_vibrato:
 	lda #$00
 	sta var_Temp16 + 1
 	jmp @Calculate
-@Phase2:
-	; Phase 2: 15 - (Phase - 16) + depth
-	sec
-	sbc #$10
-	sta var_Temp
-	sec
-	lda #$0F
-	sbc var_Temp
-	ora var_ch_VibratoDepth, x
-	tay
-	lda ft_vibrato_table, y
-	sta var_Temp16
-	lda #$00
-	sta var_Temp16 + 1
-	jmp @Calculate
 @Phase3:
 	; Phase 3: - (Phase - 32) + depth
-	sec
-	sbc #$20
+	and #$DF
+@Negate:
 	ora var_ch_VibratoDepth, x
 	tay
 	lda ft_vibrato_table, y
 
-@Negate:
 	; Invert result
+	bne :+
+	sta var_Temp16
+	sta var_Temp16 + 1
+	beq @Calculate ; always
+:
 	eor #$FF
 	sta var_Temp16
+	inc var_Temp16
 	lda #$FF
-	sta var_Temp16 + 1
-	clc
-	lda var_Temp16
-	adc #$01
-	sta var_Temp16
-	lda var_Temp16 + 1
-	adc #$00
 	sta var_Temp16 + 1
 
 @Calculate:
@@ -680,18 +658,7 @@ ft_tremolo:
 	bcc @Phase1
 ; Phase 2
 	; 15 - (Phase - 16) + depth
-	sec
-	sbc #$10
-	sta var_Temp
-	sec
-	lda #$0F
-	sbc var_Temp
-	ora var_ch_TremoloDepth, x
-	tay
-	lda ft_vibrato_table, y
-	lsr a
-	sta var_Temp
-	jmp @Calculate
+	eor #$1F
 @Phase1:
 	; Phase + depth
 	ora var_ch_TremoloDepth, x

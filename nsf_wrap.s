@@ -7,7 +7,7 @@
 .byte $01									; Version
 .byte 16  									; Number of songs
 .byte 1										; Start song
-.word LOAD
+.word $8000									;;; ;; ; LOAD, patched in tracker
 .word INIT
 .word PLAY
 .byte "ft driver                      ", 0	; Name, 32 bytes

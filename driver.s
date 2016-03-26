@@ -395,15 +395,35 @@ last_bss_var:			.res 1						; Not used
 .macro padjmp count
 .local @end
 .if .defined(USE_ALL)
- .if count > 3
-	jmp @end
-  .repeat count - 3
-	nop
-  .endrep
- .else
-  .repeat count
-	nop
-  .endrep
+ .ifndef PACKAGE
+  .if count > 3
+ 	jmp @end
+   .repeat count - 3
+ 	nop
+   .endrep
+  .else
+   .repeat count
+ 	nop
+   .endrep
+  .endif
+ .endif
+.endif
+@end:
+.endmacro
+.macro padjmp_h count
+.local @end
+.if .defined(USE_ALL)
+ .ifdef PACKAGE
+  .if count > 3
+ 	jmp @end
+   .repeat count - 3
+ 	nop
+   .endrep
+  .else
+   .repeat count
+ 	nop
+   .endrep
+  .endif
  .endif
 .endif
 @end:

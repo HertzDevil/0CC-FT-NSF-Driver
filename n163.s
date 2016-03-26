@@ -290,12 +290,13 @@ ft_n163_load_wave2:
 	sta $F800
 
 	; Get wave index
+	padjmp_h 7
 	lda var_ch_DutyCurrent, x
 	sta var_Temp3
 	beq :++
 :   lda var_ch_WaveLen - N163_OFFSET, x		;;; ;; ; Multiply wave index with wave len
-	and #$7F
 	padjmp 6
+	and #$7F
 	clc
 	adc var_Temp_Pointer2
 	sta var_Temp_Pointer2

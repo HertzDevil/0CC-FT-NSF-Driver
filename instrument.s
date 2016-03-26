@@ -5,6 +5,7 @@
 ft_run_instrument:
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x
+	padjmp_h 6
 	cmp #CHAN_VRC7
 	bne :+
 	rts
@@ -13,14 +14,14 @@ ft_run_instrument:
 	; Volume
 	;
 	lda var_ch_SeqVolume + SFX_WAVE_CHANS, x	; High part of address = 0 mean sequence is disabled
+	padjmp 6
 	beq @SkipVolumeUpdate
-	padjmp 2
-	padjmp 2
+	padjmp_h 4
 	sta var_Temp_Pointer + 1
 	lda var_ch_SeqVolume, x					; Store the sequence address in a zp variable
 	sta var_Temp_Pointer
+	padjmp 5
 	lda var_ch_SequencePtr1, x				; Sequence item index
-	padjmp 4
 	cmp #$FF
 	beq @SkipVolumeUpdate					; Skip if end is reached
 	jsr ft_run_sequence						; Run an item in the sequence
@@ -31,11 +32,12 @@ ft_run_instrument:
 
 	; Arpeggio
 	;
+	padjmp_h 6
 	lda var_ch_SeqArpeggio + SFX_WAVE_CHANS, x
 	bne :+		;;; ;; ; too long ; ;; ;;;
 	jmp @SkipArpeggioUpdate
+	padjmp 5
 :	sta var_Temp_Pointer + 1
-	padjmp 6
 	lda var_ch_SeqArpeggio, x
 	sta var_Temp_Pointer
 	lda var_ch_SequencePtr2, x

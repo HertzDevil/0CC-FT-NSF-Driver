@@ -374,7 +374,7 @@ ft_load_track:
 	sta var_Frame_Count, x
 	iny
 	inx
-	cpx #$07							;;; ;; ; Groove
+	cpx #$07							;;; ;; ; Groove (?)
 	bne @ReadLoop
 
 	rts
@@ -530,9 +530,8 @@ ft_SkipToRow:
 	sta var_Temp2
 	bne @NoRowDelay
 	beq @Finished
-:	lda var_ch_NoteDelay, x
-	sec
-	sbc var_Temp2
+:	adc	#$01
+	eor	#$FF
 	sta var_ch_NoteDelay, x
 	lda #$00
 	sta var_Temp2
@@ -601,8 +600,8 @@ ft_SkipToRow:
 	bcs @OneByteCommand
 	cmp #$E0							; See if a quick instrument command
 	bcs @LoadInst
-	cmp #$8E
-	beq @OneByteCommand
+;	cmp #$8E
+;	beq @OneByteCommand
 	cmp #$92
 	beq @OneByteCommand
 	cmp #$A2

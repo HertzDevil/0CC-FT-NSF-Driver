@@ -50,6 +50,7 @@ ENABLE_ROW_SKIP = 1		; Enable this to add code for seeking to a row > 0 when usi
 	USE_S5B  = 1
 .endif
 EXPANSION_FLAG = .defined(USE_VRC6) + .defined(USE_VRC7) << 1 + .defined(USE_FDS) << 2 + .defined(USE_MMC5) << 3 + .defined(USE_N163) << 4 + .defined(USE_S5B) << 5
+MULTICHIP = (EXPANSION_FLAG & (EXPANSION_FLAG - 1)) <> 0
 
 NTSC_PERIOD_TABLE = 1
 .if !(EXPANSION_FLAG)
@@ -286,7 +287,7 @@ var_Tempo_Modulus:		.res 2						;;; ;; ; from 0.4.6
 var_Sweep:				.res 1						; This has to be saved
 
 .if .defined(USE_BANKSWITCH)
-var_Bank:				.res 1
+;var_Bank:				.res 1
 .endif
 var_Jump:				.res 1						; If a Jump should be executed
 var_Skip:				.res 1						; If a Skip should be executed

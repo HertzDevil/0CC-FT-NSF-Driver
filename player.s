@@ -118,45 +118,29 @@ ft_read_channels:
 	lda var_Skip
 	beq @NoSkip
 	; Yes, skip
-	sec
-	sbc #$01
 .if .defined(ENABLE_ROW_SKIP)
 	; Store next row number in Temp2
+	sec
+	sbc #$01
 	sta var_SkipTo
 .endif
-	lda #$01
-	sta var_Load_Frame
-	inc var_Current_Frame
-	lda var_Current_Frame
-	cmp var_Frame_Count
-	beq @RestartSong
-;	jsr ft_load_frame
-
-	jmp @NoPatternEnd
-@RestartSong:
-	lda #$00
-	sta var_Current_Frame
-;	jsr ft_load_frame
-
-	jmp @NoPatternEnd
+	jmp @NextFrame
 @NoSkip:
 	; Current row in all channels are processed, update info
 	inc var_Pattern_Pos
 	lda var_Pattern_Pos					; See if end is reached
 	cmp var_Pattern_Length
 	bne @NoPatternEnd
+@NextFrame:								;;; ;; ; shared
 	; End of current frame, load next
+	lda #$01
+	sta var_Load_Frame
 	inc var_Current_Frame
 	lda var_Current_Frame
 	cmp var_Frame_Count
-	beq @ResetFrame
-	sta var_Load_Frame
-	jmp @NoPatternEnd
-@ResetFrame:
-	ldx #$00
-	stx var_Current_Frame
-	inx
-	stx var_Load_Frame
+	bne @NoPatternEnd
+	lda #$00
+	sta var_Current_Frame
 
 @NoPatternEnd:
 	jsr ft_restore_speed				; Reset frame divider counter
@@ -514,9 +498,8 @@ ft_read_note:
 :
 
 	cpx #$02							; Skip if not square
-	bcc :+
-	jmp @ReadIsDone
-:	lda #$00
+	bcs @JumpToDone
+	lda #$00
 	sta var_ch_Sweep, x					; Reset sweep
 @JumpToDone:
 	jmp @ReadIsDone
@@ -576,7 +559,6 @@ ft_read_note:
 	sta var_ch_PrevFreqHigh, x
 :	jmp @ReadIsDone
 @VolumeCommand:							; Handle volume
-	pla
 	asl a
 	asl a
 	asl a
@@ -587,20 +569,16 @@ ft_read_note:
 	iny
 	jmp ft_read_note
 @InstCommand:							; Instrument change
-	pla
 	and #$0F
 	asl a
 	jsr ft_load_instrument
 	iny
 	jmp ft_read_note
 @Effect:
-	pha
-	and #$F0
 	cmp #$F0							; See if volume
-	beq @VolumeCommand
+	bcs @VolumeCommand
 	cmp #$E0							; See if a quick instrument command
-	beq @InstCommand
-	pla
+	bcs @InstCommand
 	and #$7F							; Look up the command address
 	sty var_Temp						; from the command table
 	tay
@@ -612,14 +590,13 @@ ft_read_note:
 	ldy var_Temp
 	iny
 	jmp (var_Temp_Pointer)				; And jump there
-@LoadDefaultDelay:
-	sta var_ch_NoteDelay, x				; Store default delay
-	jmp ft_read_is_done
 @ReadIsDone:
 	lda var_ch_DefaultDelay, x			; See if there's a default delay
 	cmp #$FF
-	bne @LoadDefaultDelay				; If so then use it
-	iny
+	beq :+								; If so then use it
+	sta var_ch_NoteDelay, x
+	bne ft_read_is_done ; always
+:	iny
 	lda (var_Temp_Pattern), y			; A note is immediately followed by the amount of rows until next note
 	sta var_ch_NoteDelay, x
 ft_read_is_done:
@@ -633,13 +610,12 @@ ft_read_is_done:
 	sta var_ch_PatternAddrHi, x
 
 	lda var_Sweep						; Check sweep
-	beq @EndPatternFetch
+	beq :+
 	sta var_ch_Sweep, x					; Store sweep, only used for square 1 and 2
 	lda #$00
 	sta var_Sweep
 	sta var_ch_PrevFreqHigh, x
-@EndPatternFetch:
-	rts
+:	rts
 
 ; Read pattern to A and move to next byte
 ft_get_pattern_byte:
@@ -1320,7 +1296,7 @@ ft_translate_freq:
 .endif
 
 	cpx #APU_NOI				;;; ;; ; Check if noise
-	beq StoreNoise
+	beq @Noise
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 	jsr	ft_load_freq_table
 .endif							; ;; ;;;
@@ -1330,35 +1306,25 @@ ft_translate_freq:
 	; Check portamento
 	lda var_ch_Effect, x
 	cmp #EFF_PORTAMENTO
-	bne @NoPorta
+	beq :+
+	jmp LoadFrequency
 	; Load portamento
-	lda (var_Note_Table), y
+:	lda (var_Note_Table), y
 	sta var_ch_PortaToLo, x
 	iny
 	lda (var_Note_Table), y
 	sta var_ch_PortaToHi, x
 
 	ldy var_Temp
-	lda var_ch_TimerPeriodLo, x
-	ora var_ch_TimerPeriodHi, x
-	bne @Return
-	lda var_ch_PortaToLo, x
-	sta var_ch_TimerPeriodLo, x
-	lda var_ch_PortaToHi, x
-	sta var_ch_TimerPeriodHi, x
-@Return:
-	rts
-@NoPorta:
-	jmp LoadFrequency
-	rts
-StoreNoise:							; Special case for noise
-;    eor #$0F
+	jmp	@InitPorta
+@Noise:								; Special case for noise
 .if .defined(SCALE_NOISE)
 	asl a
 	asl a
 	asl a
 	asl a
 .endif
+;    eor #$0F
 	ora #$10						;;; ;; ; 0CC: check
 	pha
 	lda var_ch_Effect, x
@@ -1368,15 +1334,15 @@ StoreNoise:							; Special case for noise
 	sta var_ch_PortaToLo, x
 	lda #$00
 	sta var_ch_PortaToHi, x
+@InitPorta:
 	lda var_ch_TimerPeriodLo, x
 	ora var_ch_TimerPeriodHi, x
-	bne @Return
+	bne :+
 	lda var_ch_PortaToLo, x
 	sta var_ch_TimerPeriodLo, x
 	lda var_ch_PortaToHi, x
 	sta var_ch_TimerPeriodHi, x
-@Return:
-	rts
+:	rts
 @NoPorta:
 	pla
 	sta var_ch_TimerPeriodLo, x

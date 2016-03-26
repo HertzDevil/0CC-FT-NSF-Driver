@@ -291,8 +291,14 @@ ft_check_fds_fm:
 	sta ACC + 1
 @DoneMult:
 	jsr DIV
-	lda ACC
+	lda var_ch_ModBias
+	eor #$80
+	bpl :+
+	dec ACC + 1
+:	clc
+	adc ACC
 	sta $4086
 	lda ACC + 1
+	adc #$00
 	sta $4087
 	rts 

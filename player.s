@@ -315,6 +315,7 @@ ft_loop_channels:
 
 	; Finally update APU and expansion chip registers
 	jsr ft_update_apu
+ft_update_ext:
 .if .defined(USE_VRC6)
 	jsr	ft_update_vrc6
 .endif

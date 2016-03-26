@@ -281,21 +281,21 @@ ft_n163_load_wave2:
 	; Get number of waves
 	ldy #$00
 	lda (var_Temp_Pointer2), y
+	padjmp_h 6
 	sta var_Temp3
 
 	; Setup wave RAM
 	lda var_ch_WavePos - N163_OFFSET, x
 	lsr a
 	ora #$80
+	padjmp 7
 	sta $F800
 
 	; Get wave index
-	padjmp_h 7
 	lda var_ch_DutyCurrent, x
 	sta var_Temp3
 	beq :++
 :   lda var_ch_WaveLen - N163_OFFSET, x		;;; ;; ; Multiply wave index with wave len
-	padjmp 6
 	and #$7F
 	clc
 	adc var_Temp_Pointer2

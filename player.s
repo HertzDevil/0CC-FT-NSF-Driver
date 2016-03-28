@@ -319,11 +319,11 @@ ft_update_ext:
 .if .defined(USE_VRC6)
 	jsr	ft_update_vrc6
 .endif
-.if .defined(USE_MMC5)
-	jsr	ft_update_mmc5
-.endif
 .if .defined(USE_VRC7)
 	jsr ft_update_vrc7
+.endif
+.if .defined(USE_MMC5)
+	jsr	ft_update_mmc5
 .endif
 .if .defined(USE_FDS)
 	jsr ft_update_fds

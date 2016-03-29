@@ -1,6 +1,12 @@
 ; Takes care of the FDS registers
 
 ft_load_inst_extra_fds:
+	lda ft_channel_type, x	;;; ;; ; non-FDS instruments do not affect wave
+	cmp #CHAN_FDS
+	beq :+
+	ldy var_Temp
+	rts
+:
 	tya							;;; ;; ;
 	clc
 	adc #$10

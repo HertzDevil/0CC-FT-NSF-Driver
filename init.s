@@ -530,8 +530,9 @@ ft_SkipToRow:
 	sta var_Temp2
 	bne @NoRowDelay
 	beq @Finished
-:	adc	#$01
-	eor	#$FF
+:	lda var_ch_NoteDelay, x
+	sec
+	sbc var_Temp2
 	sta var_ch_NoteDelay, x
 	lda #$00
 	sta var_Temp2

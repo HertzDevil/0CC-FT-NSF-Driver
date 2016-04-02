@@ -1409,6 +1409,22 @@ StoreDPCM:							; Special case for DPCM
 	rts
 .endif
 
+ft_limit_note:		;;; ;; ;
+;	pha
+;	lda ft_channel_type, x
+;	cmp #CHAN_NOI
+;	pla
+	cpx #APU_NOI
+	beq :+++
+	cmp #$00
+	beq :+
+	bpl :++
+:	lda #$01
+:	cmp #$60
+	bcc :+
+	lda #$60
+:	rts				; ;; ;;;
+
 ;;; ;; ; Obtain current speed value
 ft_fetch_speed:
 	lda var_Speed

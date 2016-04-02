@@ -114,19 +114,13 @@ ft_load_slide:
 	lda var_ch_Note, x
 	sec
 	sbc var_Temp
-	bpl :+
-	lda #$01
-:   bne :+
-	lda #$01
-:   jmp @Done
+	jmp @Done
 @Add:
 	lda var_ch_Note, x
 	clc
 	adc var_Temp
-	cmp #96
-	bcc @Done
-	lda #96
 @Done:
+	jsr ft_limit_note
 	sta var_ch_Note, x
 	sta var_ch_EchoBuffer, x		;;; ;; ;
 	jsr	ft_translate_freq_only

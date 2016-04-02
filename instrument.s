@@ -83,7 +83,7 @@ ft_run_instrument:
 	rol a						; 00 = root, 01 = x, 02 = y, 03 = -y
 	bne :++						; root transposition
 :	tya
-	jmp @FinishScheme
+	jmp @Limit
 :	cmp #$01					; adding high nybble
 	bne :+
 	lda var_ch_EffParam, x
@@ -105,51 +105,28 @@ ft_run_instrument:
 :	sty var_sequence_result		; safe to overwrite
 	clc
 	adc var_sequence_result
-@FinishScheme:
-	beq :+
-	bpl :++
-:	lda #$01
-:	cmp #$60
-	bcc :+
-	lda #$60
-:	jmp @ArpDone	; ;; ;;;
+	jmp @Limit
 @Relative:
 	; Relative
 	clc
 	lda var_ch_Note, x
 	adc var_sequence_result
-	cpx #APU_NOI				;;; ;; ; noise
-	bne :+
-	ora #$80
+	jsr ft_limit_note
 	sta var_ch_Note, x
-	jmp @ArpDone				; ;; ;;;
-:	cmp #$00
-	bmi :+
-	cmp #$5F
-	bcc :++
-	lda #$5F
-	bne :++
-:	lda #$01
-:	sta var_ch_Note, x
 	jmp @ArpDone
 @Fixed:
 	; Fixed
 	lda var_sequence_result
 	clc
 	adc #$01
-	jmp @ArpDone
+	jmp @Limit
 @Absolute:
 	; Absolute
 	clc
 	lda var_ch_Note, x
 	adc var_sequence_result
-	beq :+
-	bpl :++
-:	lda #$01
-:	cmp #$60
-	bcc :+
-	lda #$60
-:
+@Limit:
+	jsr ft_limit_note
 @ArpDone:
 	jsr ft_translate_freq_only
 	lda #$01

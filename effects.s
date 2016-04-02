@@ -114,6 +114,10 @@ ft_load_slide:
 	lda var_ch_Note, x
 	sec
 	sbc var_Temp
+	bcs @Done
+	cpx #APU_NOI
+	bne @Done
+	dec var_ch_TimerPeriodHi, x
 	jmp @Done
 @Add:
 	lda var_ch_Note, x

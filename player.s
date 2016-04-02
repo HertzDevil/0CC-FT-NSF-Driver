@@ -265,9 +265,7 @@ ft_skip_row_update:
 	jmp @BeginCut						; branch
 
 	; Update channel instruments and effects
-:	lda #$01							;;; ;; ; Prevent noise channel from halting
-	sta var_ch_TimerPeriodHi + APU_NOI	; ;; ;;;
-	ldx #$00
+:	ldx #$00
 
 ; Loop through wave channels
 ft_loop_channels:
@@ -497,9 +495,12 @@ ft_read_note:
 :	lda #EFF_NONE
 	sta var_ch_Effect, x
 :
-
-	cpx #$02							; Skip if not square
-	bcs @JumpToDone
+	cpx #APU_NOI						;;; ;; ;
+	bne :+
+	lda #$80 ; should be enough
+	sta var_ch_TimerPeriodHi, x			; ;; ;;;
+:	cpx #APU_TRI						; Skip if not square
+	bcs @JumpToDone						; assume default layout
 	lda #$00
 	sta var_ch_Sweep, x					; Reset sweep
 @JumpToDone:

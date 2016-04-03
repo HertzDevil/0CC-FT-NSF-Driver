@@ -275,7 +275,8 @@ var_GroovePointer:		.res 1						;;; ;; ; Groove setting
 var_InitialBank:		.res 1
 
 ; General
-var_PlayerFlags:		.res 1						; Player flags, bit 0 = playing, bit 1 - 7 unused
+var_PlayerFlags:		.res 1						; Player flags
+													;;; ;; ; bit 0 = playing, bit 1 = Cxx issued, bit 2 - 7 unused
 var_Pattern_Pos:		.res 1						; Global pattern row
 var_Current_Frame:		.res 1						; Current frame
 var_Load_Frame:			.res 1						; 1 if new frame should be loaded

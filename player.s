@@ -5,6 +5,7 @@
 ;
 ft_music_play:
 	lda var_PlayerFlags					; Skip if player is disabled
+	and #%00000001						;;; ;; ; bit 0 = enable playing
 	bne :+
 	rts									; Not playing, return
 :
@@ -52,6 +53,13 @@ ft_do_row_update:
 	sta var_ch_DPCM_Retrig
 .endif
 
+	lda var_PlayerFlags					;;; ;; ;
+	and #%00000010
+	beq :+
+	eor var_PlayerFlags
+	and #%11111100
+	sta var_PlayerFlags
+:
 	; Switches to new frames are delayed to next row to resolve issues with delayed notes.
 	; It won't work if new pattern adresses are loaded before the delayed note is played
 	lda var_Load_Frame
@@ -800,7 +808,8 @@ ft_cmd_skip:
 ; Effect: Halt (Cxx)
 ft_cmd_halt:
 	jsr ft_get_pattern_byte
-	lda #$00
+	lda var_PlayerFlags
+	ora #%00000010
 	sta var_PlayerFlags
 	jmp ft_read_note
 ;;; ;; ; Effect: Hardware envelope control (Exx)

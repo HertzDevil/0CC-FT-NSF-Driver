@@ -328,11 +328,11 @@ ft_update_ext:		;; Patch
 .if .defined(USE_VRC7)
 	jsr ft_update_vrc7
 .endif
-.if .defined(USE_MMC5)
-	jsr	ft_update_mmc5
-.endif
 .if .defined(USE_FDS)
 	jsr ft_update_fds
+.endif
+.if .defined(USE_MMC5)
+	jsr	ft_update_mmc5
 .endif
 .if .defined(USE_N163)
 	jsr ft_update_n163

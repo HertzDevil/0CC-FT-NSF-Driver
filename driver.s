@@ -35,8 +35,8 @@ ENABLE_ROW_SKIP = 1		; Enable this to add code for seeking to a row > 0 when usi
 ;PACKAGE = 1			; header
 ;USE_VRC6 = 1 			; Enable this to include VRC6 code
 ;USE_VRC7 = 1			; Enable this to include VRC7 code
-;USE_MMC5 = 1			; Enable this to include MMC5 code
 ;USE_FDS  = 1			; Enable this to include FDS code
+;USE_MMC5 = 1			; Enable this to include MMC5 code
 ;USE_N163 = 1			; Enable this to include N163 code
 ;USE_S5B  = 1			; Enable this to include 5B code
 ;USE_ALL  = 1			;;; ;; ; All expansion chips, always assumes 8 N163 channels
@@ -44,8 +44,8 @@ ENABLE_ROW_SKIP = 1		; Enable this to add code for seeking to a row > 0 when usi
 .if .defined(USE_ALL)	;;; ;; ;
 	USE_VRC6 = 1
 	USE_VRC7 = 1
-	USE_MMC5 = 1
 	USE_FDS  = 1
+	USE_MMC5 = 1
 	USE_N163 = 1
 	USE_S5B  = 1
 .endif

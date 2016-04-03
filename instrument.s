@@ -2,22 +2,20 @@
 ;
 ; I might consider storing the sequence address variables in ZP??
 ;
-	padjmp_h 8
+	padjmp 5
 ft_run_instrument:
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
 	bne :+
 	rts
-:	padjmp 8
+:
 .endif
 	; Volume
 	;
-	padjmp_h 5
 	lda var_ch_SeqVolume + SFX_WAVE_CHANS, x	; High part of address = 0 mean sequence is disabled
 	beq @SkipVolumeUpdate
 	sta var_Temp_Pointer + 1
-	padjmp 6
 	lda var_ch_SeqVolume, x					; Store the sequence address in a zp variable
 	sta var_Temp_Pointer
 	lda var_ch_SequencePtr1, x				; Sequence item index
@@ -26,14 +24,12 @@ ft_run_instrument:
 	jsr ft_run_sequence						; Run an item in the sequence
 	sta var_ch_SequencePtr1, x				; Store new index
 	lda var_sequence_result					; Take care of the result
-	padjmp_h 4
 	sta var_ch_Volume, x
 @SkipVolumeUpdate:
 
 	; Arpeggio
 	;
 	lda var_ch_SeqArpeggio + SFX_WAVE_CHANS, x
-	padjmp 5
 	bne :+		;;; ;; ; too long ; ;; ;;;
 	jmp @SkipArpeggioUpdate
 :	sta var_Temp_Pointer + 1

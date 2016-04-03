@@ -270,15 +270,15 @@ ft_n163_load_wave2:
 .endif						; ;; ;;;
 
 	tya
-	padjmp_h 6
 	pha
+	padjmp_h 7
 
 	; Get wave pack pointer
 	lda var_ch_WavePtrLo - N163_OFFSET, x
 	sta var_Temp_Pointer2
-	padjmp 7
 	lda var_ch_WavePtrHi - N163_OFFSET, x
 	sta var_Temp_Pointer2 + 1
+	padjmp 6
 
 	; Get number of waves
 	ldy #$00

@@ -265,8 +265,8 @@ ft_n163_load_wave2:
 	rts
 :										; ;; ;;;
 .if .defined(USE_S5B)		;;; ;; ;
+	padjmp_h	6
 	lda #$0E
-	padjmp_h	7
 	sta $C000
 .endif						; ;; ;;;
 
@@ -276,9 +276,9 @@ ft_n163_load_wave2:
 	; Get wave pack pointer
 	lda var_ch_WavePtrLo - N163_OFFSET, x
 	sta var_Temp_Pointer2
+	padjmp	7
 	lda var_ch_WavePtrHi - N163_OFFSET, x
 	sta var_Temp_Pointer2 + 1
-	padjmp 6
 
 	; Get number of waves
 	ldy #$00

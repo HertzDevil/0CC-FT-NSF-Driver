@@ -48,12 +48,12 @@ ft_load_inst_extra_n163:
 .endif
 @DoneParams:
 	lda var_NamcoInstrument, x
-	cmp var_Temp3
+	cmp var_Temp2
 	beq :+
 	lda #$00             ; reset wave
 	sta var_ch_DutyDefault, x
 	sta var_ch_DutyCurrent, x
-	lda var_Temp3
+	lda var_Temp2
 	; Load N163 wave
 ;    jsr ft_n163_load_wave
 :   sta var_NamcoInstrument, x
@@ -266,12 +266,12 @@ ft_n163_load_wave2:
 :										; ;; ;;;
 .if .defined(USE_S5B)		;;; ;; ;
 	lda #$0E
+	padjmp_h	7
 	sta $C000
 .endif						; ;; ;;;
 
 	tya
 	pha
-	padjmp_h 7
 
 	; Get wave pack pointer
 	lda var_ch_WavePtrLo - N163_OFFSET, x

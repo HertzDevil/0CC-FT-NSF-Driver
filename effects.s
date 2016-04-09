@@ -632,25 +632,25 @@ ft_vibrato:
 	sta var_ch_PeriodCalcHi, x
 	rts
 
-	padjmp_h 8
 ; Tremolo calculation
 ;
+	padjmp_h	8
 ft_tremolo:
 	lda var_ch_TremoloSpeed, x
 	bne @DoTremolo
 ;	lda var_ch_Volume, x
 ;	sta var_ch_OutVolume, x
 	lda #$00
-	padjmp_h 6
-	padjmp 9
+	padjmp_h	6
 	sta var_ch_TremoloResult, x
 	rts
+	padjmp	5
 @DoTremolo:
 	clc
 	adc var_ch_TremoloPos, x		; Get next position
-	padjmp 5
 	and #$3F
 	sta var_ch_TremoloPos, x
+	padjmp	4
 	lsr a							; Divide by 2
 	cmp #$10
 	bcc @Phase1
@@ -663,7 +663,7 @@ ft_tremolo:
 	tay
 	lda ft_vibrato_table, y
 	lsr a
-	padjmp_h 4
+	padjmp_h	4
 	sta var_Temp
 @Calculate:
 	sta var_ch_TremoloResult, x

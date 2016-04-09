@@ -2,13 +2,13 @@
 ;
 ; I might consider storing the sequence address variables in ZP??
 ;
-	padjmp 5
 ft_run_instrument:
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
 	bne :+
 	rts
+	padjmp	5
 :
 .endif
 	; Volume
@@ -278,6 +278,8 @@ ft_run_instrument:
 	; Save pitch
 @SkipDutyUpdate:
 .if .defined(USE_N163)
+	lda var_ch_Trigger, x
+	beq :+
 	lda ft_channel_type, x
 	cmp #CHAN_N163
 	bne :+
@@ -475,7 +477,7 @@ ft_load_instrument:
 	; Instrument_pointer_list + a => instrument_address
 	; instrument_address + ft_music_addr => instrument_data
 
-	sta var_Temp3	; used by VRC7
+	sta var_Temp2	;;; ;; ; used by N163
 
 	; Get the instrument data pointer
 	sty var_Temp

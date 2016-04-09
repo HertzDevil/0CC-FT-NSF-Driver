@@ -53,20 +53,20 @@ ft_periods_fds: ;; Patch
 ; N163
 .if .defined(USE_N163)
 ft_periods_n163: ;; Patch
-	.word	$023E, $0260, $0285, $02AB, $02D4, $02FF, $032C, $035D, $0390, $03C6, $0400, $043D
-	.word	$047D, $04C1, $050A, $0557, $05A8, $05FE, $0659, $06BA, $0720, $078D, $0800, $087A
-	.word	$08FB, $0983, $0A14, $0AAE, $0B50, $0BFD, $0CB3, $0D74, $0E41, $0F1A, $1000, $10F4
+	.word	$023E, $0261, $0285, $02AB, $02D4, $02FF, $032D, $035D, $0390, $03C6, $0400, $043D
+	.word	$047D, $04C2, $050A, $0557, $05A8, $05FE, $0659, $06BA, $0720, $078D, $0800, $087A
+	.word	$08FB, $0984, $0A14, $0AAE, $0B50, $0BFD, $0CB3, $0D75, $0E41, $0F1A, $1000, $10F4
 	.word	$11F6, $1307, $1429, $155C, $16A1, $17FA, $1967, $1AE9, $1C83, $1E35, $2001, $21E8
-	.word	$23EC, $260F, $2852, $2AB8, $2D43, $2FF4, $32CE, $35D3, $3906, $3C6A, $4002, $43D1
-	.word	$47D9, $4C1F, $50A5, $5571, $5A86, $5FE8, $659C, $6BA7, $720D, $78D5, $8005, $87A2
-	.word	$8FB2, $983E, $A14B, $AAE3, $B50C, $BFD0, $CB38, $D74E, $E41B, $F1AB, $FFFF, $FFFF
+	.word	$23EC, $260F, $2853, $2AB8, $2D43, $2FF4, $32CE, $35D3, $3907, $3C6B, $4002, $43D1
+	.word	$47D9, $4C1F, $50A6, $5571, $5A86, $5FE8, $659C, $6BA7, $720D, $78D6, $8005, $87A2
+	.word	$8FB3, $983E, $A14C, $AAE3, $B50C, $BFD0, $CB38, $D74E, $E41B, $F1AC, $FFFF, $FFFF
 	.word	$FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
 .endif
 
-;;; ;; ; VRC7, moved from vrc7.s
+; VRC7
 .if .defined(USE_VRC7)
 ; Fnum table, multiplied by 4 for higher resolution
-.define ft_vrc7_table 688, 732, 776, 820, 868, 920, 976, 1032, 1096, 1160, 1228, 1304
+.define ft_vrc7_table $02B0, $02DC, $0308, $0334, $0364, $0398, $03D0, $0408, $0448, $0488, $04CC, $0518
 
 ft_note_table_vrc7_l: ;; Patch
 	.lobytes ft_vrc7_table

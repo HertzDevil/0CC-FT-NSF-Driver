@@ -1559,10 +1559,12 @@ ft_calculate_speed:
 	rts
 
 .if .defined(USE_LINEARPITCH) || .defined(USE_FDS)
-MUL:		;;; ;; ; var_Temp16 * var_Temp -> ACC
+MUL:		;;; ;; ; var_Temp16 * var_Temp -> ACC (highest byte in EXT)
 	lda #$00
 	sta ACC
 	sta ACC + 1
+	sta EXT
+	sta EXT + 1
 	ldy #$08
 @MultStep:
 	lda var_Temp
@@ -1575,17 +1577,15 @@ MUL:		;;; ;; ; var_Temp16 * var_Temp -> ACC
 	sta ACC
 	lda ACC + 1
 	adc var_Temp16 + 1
-	bcs @Overflow
 	sta ACC + 1
+	lda EXT
+	adc EXT + 1
+	sta EXT
 :   asl var_Temp16
 	rol var_Temp16 + 1
+	rol EXT + 1
 	dey
 	bne @MultStep
-	rts
-@Overflow:
-	lda #$FF
-	sta ACC
-	sta ACC + 1
 	rts
 .endif
 

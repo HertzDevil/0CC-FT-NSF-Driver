@@ -270,7 +270,12 @@ ft_check_fds_fm:
 	sta AUX + 1
 
 	jsr MUL
-	jsr DIV
+	lda EXT
+	beq :+
+	lda #$FF
+	sta ACC
+	sta ACC + 1
+:	jsr DIV
 	lda var_ch_ModBias
 	eor #$80
 	bpl :+

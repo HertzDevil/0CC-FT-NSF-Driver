@@ -203,10 +203,7 @@ ft_load_song:
 	lda (var_Temp_Pointer), y
 	iny
 	sta var_Tempo_Dec + 1
-	lda #<ft_periods_ntsc		;; Patch
-	sta var_Note_Table
-	lda #>ft_periods_ntsc
-	sta var_Note_Table + 1
+	jsr ft_load_ntsc_table		;;; ;; ;
 .if .defined(USE_N163)
 	iny
 	iny
@@ -224,10 +221,10 @@ ft_load_song:
 	lda (var_Temp_Pointer), y
 	iny
 	sta var_Tempo_Dec + 1
-	lda #<ft_periods_pal		;; Patch
-	sta var_Note_Table
-	lda #>ft_periods_pal
-	sta var_Note_Table + 1
+	lda var_PlayerFlags		;;; ;; ;
+	ora #FLAG_USEPAL
+	sta var_PlayerFlags
+	jsr ft_load_pal_table		; ;; ;;;
 .endif
 @LoadDone:
 	clc

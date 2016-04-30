@@ -1168,48 +1168,60 @@ ft_cmd_s5b_env_rate_lo:
 
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 ft_load_freq_table:
-	pha
 	lda ft_channel_type, x
 .if .defined(USE_N163)
 	cmp #CHAN_N163
 	bne :+
+ft_load_n163_table:
 	lda #<ft_periods_n163		;; Patch
 	sta var_Note_Table
 	lda #>ft_periods_n163
 	sta var_Note_Table + 1
-	pla
 	rts
 :
 .endif
 .if .defined(USE_FDS)
 	cmp #CHAN_FDS
 	bne :+
+ft_load_fds_table:
 	lda #<ft_periods_fds		;; Patch
 	sta var_Note_Table
 	lda #>ft_periods_fds
 	sta var_Note_Table + 1
-	pla
 	rts
 :
 .endif
 .if .defined(USE_VRC6)
 	cmp #CHAN_SAW
 	bne :+
+ft_load_saw_table:
 	lda #<ft_periods_sawtooth	;; Patch
 	sta var_Note_Table
 	lda #>ft_periods_sawtooth
 	sta var_Note_Table + 1
-	pla
 	rts
 :
 .endif
+	; fallthrough
+.endif
+
+.if .defined(NTSC_PERIOD_TABLE)
+ft_load_ntsc_table:
 	lda	#<ft_periods_ntsc		;; Patch
 	sta var_Note_Table
 	lda #>ft_periods_ntsc
 	sta var_Note_Table + 1
-	pla
+.endif
+	rts								; ;; ;;;
+
+.if .defined(PAL_PERIOD_TABLE)		;;; ;; ;
+ft_load_pal_table:
+	lda	#<ft_periods_pal		;; Patch
+	sta var_Note_Table
+	lda #>ft_periods_pal
+	sta var_Note_Table + 1
 	rts
-.endif									; ;; ;;;
+.endif								; ;; ;;;
 
 ft_clear_transpose:						;;; ;; ;
 	adc var_ch_Note, x
@@ -1230,16 +1242,15 @@ ft_translate_freq_only:
 	sec
 	sbc #$01
 
+	pha						
 .if .defined(USE_VRC7)
-	pha
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
 	bne :+
 	pla
 	sta var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
-	jsr ft_vrc7_get_freq_only
-	rts
-:	pla
+	jmp ft_vrc7_get_freq_only
+:
 .endif
 
 
@@ -1248,6 +1259,7 @@ ft_translate_freq_only:
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 	jsr	ft_load_freq_table
 .endif							; ;; ;;;
+	pla
 	asl a
 	sty var_Temp
 
@@ -1295,19 +1307,17 @@ ft_translate_freq:
 	cmp #CHAN_DPCM				; ;; ;;;
 	bne :+
 	jmp StoreDPCM
-:	pla
+:
 .endif
 
 .if .defined(USE_VRC7)
-	pha
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
 	bne :+
 	pla
 	sta var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
-	jsr ft_vrc7_get_freq
-	rts
-:	pla
+	jmp ft_vrc7_get_freq
+:
 .endif
 
 	cpx #APU_NOI				;;; ;; ; Check if noise
@@ -1315,6 +1325,7 @@ ft_translate_freq:
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 	jsr	ft_load_freq_table
 .endif							; ;; ;;;
+	pla
 	asl a
 	sty var_Temp
 	tay
@@ -1546,6 +1557,37 @@ ft_calculate_speed:
 	tay
 
 	rts
+
+.if .defined(USE_LINEARPITCH) || .defined(USE_FDS)
+MUL:		;;; ;; ; var_Temp16 * var_Temp -> ACC
+	lda #$00
+	sta ACC
+	sta ACC + 1
+	ldy #$08
+@MultStep:
+	lda var_Temp
+	lsr a
+	sta var_Temp
+	bcc :+
+	clc
+	lda ACC
+	adc var_Temp16
+	sta ACC
+	lda ACC + 1
+	adc var_Temp16 + 1
+	bcs @Overflow
+	sta ACC + 1
+:   asl var_Temp16
+	rol var_Temp16 + 1
+	dey
+	bne @MultStep
+	rts
+@Overflow:
+	lda #$FF
+	sta ACC
+	sta ACC + 1
+	rts
+.endif
 
 ; If anyone knows a way to calculate speed without using
 ; multiplication or division, please contact me

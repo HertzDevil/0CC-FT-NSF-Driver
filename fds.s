@@ -267,35 +267,9 @@ ft_check_fds_fm:
 	lda var_ch_PeriodCalcLo + FDS_OFFSET
 	sta var_Temp16
 	lda #$00
-	sta ACC
-	sta ACC + 1
 	sta AUX + 1
 
-	; var_Temp16 * var_Temp -> ACC
-	ldy #$08
-@MultStep:
-	lda var_Temp
-	lsr a
-	sta var_Temp
-	bcc :+
-	clc
-	lda ACC
-	adc var_Temp16
-	sta ACC
-	lda ACC + 1
-	adc var_Temp16 + 1
-	bcs @Overflow
-	sta ACC + 1
-:   asl var_Temp16
-	rol var_Temp16 + 1
-	dey
-	bne @MultStep
-	beq @DoneMult ; always
-@Overflow:
-	lda #$FF
-	sta ACC
-	sta ACC + 1
-@DoneMult:
+	jsr MUL
 	jsr DIV
 	lda var_ch_ModBias
 	eor #$80

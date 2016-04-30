@@ -62,17 +62,21 @@ ft_music_init:
 	cpx #WAVE_CHANS
 	bne :--								; ;; ;;;
 
+.if .defined(USE_OLDVIBRATO)		;;; ;; ;
 	lda var_SongFlags
-	and #$02
-	beq :++
+	and #FLAG_OLDVIBRATO
+	beq :+
 	lda #48
+:
+.endif
 	ldx #$00
 :	sta var_ch_VibratoPos, x
 	inx
 	cpx #WAVE_CHANS
 	bne :-
+.if .defined(USE_OLDVIBRATO)		;;; ;; ;
 	lda #$00
-:
+.endif
 
 	; DPCM
 .if .defined(USE_DPCM)
@@ -462,7 +466,7 @@ ft_load_frame:
 ; Bankswitch values
 .if .defined(USE_BANKSWITCH)
 	lda var_SongFlags					; Check bankswitch flag
-	and #$01
+	and #FLAG_BANKSWITCH
 	beq @SkipBankValues					; Skip if no bankswitch info is stored
 	ldx #$00
 @LoadBankValues:

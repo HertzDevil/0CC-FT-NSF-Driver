@@ -24,6 +24,8 @@
 ;
 
 USE_BANKSWITCH = 1		; Enable bankswitching code
+USE_OLDVIBRATO = 1		;;; ;; ; Enable old vibrato code
+
 USE_DPCM = 1			; Enable DPCM channel (currently broken, leave enabled to avoid trouble).
 						; Also leave enabled when using expansion chips
 
@@ -141,6 +143,12 @@ CHANNELS	= DPCM_OFFSET + .defined(USE_DPCM)
 	EFF_SLIDE_DOWN
 .endenum
 
+.enum
+	FLAG_BANKSWITCH  = %00000001
+	FLAG_OLDVIBRATO  = %00000010
+	FLAG_LINEARPITCH = %00000100
+.endenum
+
 .segment "ZEROPAGE"
 
 ;
@@ -256,7 +264,7 @@ var_dpcm_inst_list:		.res 2						; DPCM instruments
 var_dpcm_pointers:		.res 2						; DPCM sample pointers
 .endif
 var_Groove_Table:		.res 2						;;; ;; ; Grooves
-var_SongFlags:			.res 1						; Song flags, bit 0 = bankswitched, bit 1 = old vibrato, bit 2 - 7 = unused
+var_SongFlags:			.res 1						; Song flags
 .if .defined(USE_FDS)
 var_Wavetables:			.res 2						; FDS waves
 .endif
@@ -276,7 +284,9 @@ var_InitialBank:		.res 1
 
 ; General
 var_PlayerFlags:		.res 1						; Player flags
-													;;; ;; ; bit 0 = playing, bit 1 = Cxx issued, bit 2 - 7 unused
+													; bit 0 = playing
+													;;; ;; ; bit 1 = Cxx issued
+													; bit 2 - 7 unused
 var_Pattern_Pos:		.res 1						; Global pattern row
 var_Current_Frame:		.res 1						; Current frame
 var_Load_Frame:			.res 1						; 1 if new frame should be loaded

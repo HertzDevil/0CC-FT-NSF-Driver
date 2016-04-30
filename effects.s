@@ -566,9 +566,9 @@ ft_vibrato:
 
 @Calculate:
 
-	; Remove this if you don't need support for old vibrato
+.if .defined(USE_OLDVIBRATO)		;;; ;; ;
 	lda var_SongFlags
-	and #$02
+	and #FLAG_OLDVIBRATO
 	beq :+
 	lda #$0F
 	clc
@@ -586,6 +586,7 @@ ft_vibrato:
 	lsr var_Temp16 + 1			; divide by 2
 	ror var_Temp16
 :
+.endif
 
 .if .defined(USE_N163)
 	lda ft_channel_type, x

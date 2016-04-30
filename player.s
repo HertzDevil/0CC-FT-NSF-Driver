@@ -878,13 +878,17 @@ ft_cmd_vibrato:
 	jsr ft_get_pattern_byte
 	pha
 	lda var_ch_VibratoSpeed, x
-	bne :++
+	bne @FinishPos
+.if .defined(USE_OLDVIBRATO)
 	lda var_SongFlags
-	and #$02
+	and #FLAG_OLDVIBRATO
 	beq :+
 	lda #48
-:	sta var_ch_VibratoPos, x
-:	pla
+:
+.endif
+	sta var_ch_VibratoPos, x
+@FinishPos:
+	pla
 	pha
 	and #$F0
 	sta var_ch_VibratoDepth, x

@@ -304,19 +304,34 @@ ft_n163_load_wave2:
 
 	; Get wave index
 	lda var_ch_DutyCurrent, x
-	sta var_Temp3
-	beq :++
-:   lda var_ch_WaveLen - N163_OFFSET, x		;;; ;; ; Multiply wave index with wave len
+	beq @EndMul		;;; ;; ; Multiply wave index with wave len
+.if .defined(USE_MMC5) && .defined(USE_MMC5_MULTIPLIER)
+	sta $5205
+	lda	var_ch_WaveLen - N163_OFFSET, x
 	and #$7F
+	sta $5206
+	clc
+	lda $5205
+	adc var_Temp_Pointer2
+	sta var_Temp_Pointer2
+	lda $5206
+	adc var_Temp_Pointer2 + 1
+	sta var_Temp_Pointer2 + 1
+.else
+	sta var_Temp3
+	lda	var_ch_WaveLen - N163_OFFSET, x
+	and #$7F
+	tay
+:   tya
 	clc
 	adc var_Temp_Pointer2
 	sta var_Temp_Pointer2
-	lda var_Temp_Pointer2 + 1
-	adc #$00
-	sta var_Temp_Pointer2 + 1
-	dec var_Temp3
-	bne :-
-:   										; ;; ;;;
+	bcc :+
+	inc var_Temp_Pointer2 + 1
+:	dec var_Temp3
+	bne :--
+.endif
+@EndMul:		; ;; ;;;
 
 	txa          ; Save X
 	pha

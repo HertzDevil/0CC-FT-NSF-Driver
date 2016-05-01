@@ -247,17 +247,17 @@ ft_check_fds_effects:
 	sta var_ch_ModRate + 1
 :   lda var_ch_ModEffWritten
 	and #$04
-	padjmp_h	7
 	beq :+
+	padjmp_h	6
 	; FDS modulation rate low
 	lda var_ch_ModEffRate + 0
 	sta var_ch_ModRate + 0
 :
 	lda #$00
-	padjmp		7
 	sta var_ch_ModEffWritten
 
 	rts
+	padjmp		5
 
 ft_check_fds_fm:
 	lda var_ch_ModRate + 1					;;; ;; ;

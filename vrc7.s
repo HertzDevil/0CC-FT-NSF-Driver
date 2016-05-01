@@ -66,9 +66,8 @@ ft_vrc7_linear_fetch_pitch:
 	sta var_ch_PeriodCalcHi, x
 	
 	lda var_Temp
-	bne :+
-	rts
-:	
+	beq :+
+
 	iny
 	sec
 	lda ft_note_table_vrc7_l, y
@@ -79,7 +78,7 @@ ft_vrc7_linear_fetch_pitch:
 	sta var_Temp16 + 1
 
 	jsr ft_linear__final
-	lsr var_ch_PeriodCalcHi, x
+:	lsr var_ch_PeriodCalcHi, x
 	ror var_ch_PeriodCalcLo, x
 	lsr var_ch_PeriodCalcHi, x
 	ror var_ch_PeriodCalcLo, x

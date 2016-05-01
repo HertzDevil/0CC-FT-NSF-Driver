@@ -42,15 +42,49 @@ ft_init_vrc7:
 ft_translate_note_vrc7:
 	; Calculate Fnum & Bnum
 	; Input: A = note + 1
-	; Result: EXT = Fnum index, ACC = Bnum
-	sta ACC
-	lda #12
-	sta AUX
+	; Result: A = Fnum index, ACC = Bnum
+:	cmp #12
+	bcc :+ ; sec
+	sbc #12
+	inc ACC
+	bne :- ; always
+:	rts
+
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+ft_vrc7_linear_fetch_pitch:
+	jsr ft_linear_prescale
 	lda #$00
-	sta ACC + 1
-	sta AUX + 1
-	jsr DIV
+	sta ACC
+	lda var_ch_PeriodCalcHi, x
+	jsr ft_translate_note_vrc7
+	tay
+	lda ACC
+	sta var_ch_vrc7_Bnum - VRC7_OFFSET, x
+	lda ft_note_table_vrc7_l, y
+	sta var_ch_PeriodCalcLo, x
+	lda ft_note_table_vrc7_h, y
+	sta var_ch_PeriodCalcHi, x
+	
+	lda var_Temp
+	bne :+
 	rts
+:	
+	iny
+	sec
+	lda ft_note_table_vrc7_l, y
+	sbc var_ch_PeriodCalcLo, x
+	sta var_Temp16
+	lda ft_note_table_vrc7_h, y
+	sbc var_ch_PeriodCalcHi, x
+	sta var_Temp16 + 1
+
+	jsr ft_linear__final
+	lsr var_ch_PeriodCalcHi, x
+	ror var_ch_PeriodCalcLo, x
+	lsr var_ch_PeriodCalcHi, x
+	ror var_ch_PeriodCalcLo, x
+	rts
+.endif
 
 ft_clear_vrc7:
 	clc
@@ -83,7 +117,17 @@ ft_update_vrc7:
 	bne :-
 	rts
 @Play:
-
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	beq :++
+	ldx #VRC7_OFFSET
+:	jsr ft_vrc7_linear_fetch_pitch
+	inx
+	cpx #(VRC7_OFFSET + CH_COUNT_VRC7)
+	bne :-
+:
+.endif								; ;; ;;;
 	ldx #$00					; x = channel
 @LoopChannels:
 
@@ -286,9 +330,11 @@ ft_vrc7_get_freq:
 	sta var_ch_vrc7_OldOctave
 
 	; Retrigger channel
+	lda #$00		;;; ;; ;
+	sta ACC		; ;; ;;;
 	lda var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
 	jsr ft_translate_note_vrc7
-	ldy EXT	; note index -> y
+	tay
 
 	lda var_ch_Effect, x
 	cmp #EFF_PORTAMENTO
@@ -345,9 +391,11 @@ ft_vrc7_get_freq_only:
 	pha
 
 	; Retrigger channel
+	lda #$00		;;; ;; ;
+	sta ACC		; ;; ;;;
 	lda var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
 	jsr ft_translate_note_vrc7
-	ldy EXT	; note index -> y
+	tay
 
 	lda ft_note_table_vrc7_l, y
 	sta var_ch_TimerPeriodLo, x

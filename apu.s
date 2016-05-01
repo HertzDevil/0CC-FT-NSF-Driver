@@ -53,6 +53,29 @@ ft_update_apu:
 	sta $4017
 	rts
 @Play:
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	beq @End
+.if .defined(PAL_PERIOD_TABLE)
+	lda var_SongFlags
+	and #FLAG_USEPAL
+	bne :+
+	jsr ft_load_ntsc_table
+	jmp @TableLoaded
+:	jsr ft_load_pal_table
+.else
+	jsr ft_load_ntsc_table
+.endif
+@TableLoaded:
+	ldx #APU_OFFSET
+	jsr ft_linear_fetch_pitch
+	inx
+	jsr ft_linear_fetch_pitch
+	inx
+	jsr ft_linear_fetch_pitch
+@End:
+.endif								; ;; ;;;
 	ldx #$00
 	ldy #$00
 ; ==============================================================================

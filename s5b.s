@@ -78,6 +78,19 @@ ft_update_s5b:
 	cpx #CH_COUNT_S5B
 	bcc @UpdateNoiseMask
 
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	beq :+
+	jsr ft_load_ntsc_table
+	ldx #S5B_OFFSET
+	jsr ft_linear_fetch_pitch
+	inx
+	jsr ft_linear_fetch_pitch
+	inx
+	jsr ft_linear_fetch_pitch
+:
+.endif								; ;; ;;;
 	ldx #$00
 	ldy #$00
 @ChannelLoop:

@@ -341,7 +341,7 @@ ft_update_ext:		;; Patch
 	jsr ft_update_s5b
 .endif
 
-	; End of music routine, return
+END:		; End of music routine, return
 	rts
 
 
@@ -1241,8 +1241,16 @@ ft_translate_freq_only:
 
 	sec
 	sbc #$01
+	
+	cpx #APU_NOI							;;; ;; ; Check if noise
+	beq StoreNoise2
 
 	pha						
+.if .defined(USE_LINEARPITCH)				;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne LoadFrequencyLinear
+.endif										; ;; ;;;
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
@@ -1253,9 +1261,6 @@ ft_translate_freq_only:
 :
 .endif
 
-
-	cpx #APU_NOI							;;; ;; ; Check if noise
-	beq StoreNoise2
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 	jsr	ft_load_freq_table
 .endif							; ;; ;;;
@@ -1272,6 +1277,21 @@ LoadFrequency:
 	sta var_ch_TimerPeriodHi, x
 	ldy var_Temp
 	rts
+
+.if .defined(USE_LINEARPITCH)				;;; ;; ;
+LoadFrequencyLinear:		;;; ;; ;
+	lda #$00
+	sta var_ch_TimerPeriodLo, x
+	pla
+	lsr a
+	ror var_ch_TimerPeriodLo, x
+	lsr a
+	ror var_ch_TimerPeriodLo, x
+	lsr a
+	ror var_ch_TimerPeriodLo, x
+	sta var_ch_TimerPeriodHi, x
+	rts
+.endif
 
 StoreNoise2:
 ;    eor #$0F
@@ -1301,14 +1321,38 @@ ft_translate_freq:
 	sec
 	sbc #$01
 
-.if .defined(USE_DPCM)
+	cpx #APU_NOI				;;; ;; ; Check if noise
+	beq @Noise
+
 	pha
+.if .defined(USE_DPCM)
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM				; ;; ;;;
 	bne :+
 	jmp StoreDPCM
 :
 .endif
+
+.if .defined(USE_LINEARPITCH)				;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	beq :+
+	lda var_ch_Effect, x
+	cmp #EFF_PORTAMENTO
+	bne LoadFrequencyLinear
+	lda #$00
+	sta var_ch_PortaToLo, x
+	pla
+	lsr a
+	ror var_ch_PortaToLo, x
+	lsr a
+	ror var_ch_PortaToLo, x
+	lsr a
+	ror var_ch_PortaToLo, x
+	sta var_ch_PortaToHi, x
+	jmp @InitPorta
+:
+.endif										; ;; ;;;
 
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x
@@ -1320,8 +1364,6 @@ ft_translate_freq:
 :
 .endif
 
-	cpx #APU_NOI				;;; ;; ; Check if noise
-	beq @Noise
 .if .defined(USE_N163) || .defined(USE_FDS) || .defined(USE_VRC6)		;;; ;; ;
 	jsr	ft_load_freq_table
 .endif							; ;; ;;;
@@ -1449,6 +1491,95 @@ ft_limit_note:		;;; ;; ;
 	bcc :+
 	lda #$60
 :	rts				; ;; ;;;
+
+.if .defined(USE_LINEARPITCH)
+ft_linear_prescale:
+	asl var_ch_PeriodCalcLo, x
+	rol var_ch_PeriodCalcHi, x
+	asl var_ch_PeriodCalcLo, x
+	rol var_ch_PeriodCalcHi, x
+	asl var_ch_PeriodCalcLo, x
+	rol var_ch_PeriodCalcHi, x
+	lda var_ch_PeriodCalcLo, x
+	sta var_Temp
+	rts
+
+ft_linear_fetch_pitch:
+	jsr ft_linear_prescale
+	asl var_ch_PeriodCalcHi, x
+	
+	ldy var_ch_PeriodCalcHi, x
+	lda (var_Note_Table), y
+	sta var_ch_PeriodCalcLo, x
+	iny
+	lda (var_Note_Table), y
+	sta var_ch_PeriodCalcHi, x
+
+	cpy #$BF
+	bcs @Return
+	lda var_Temp
+	beq @Return
+
+	lda ft_channel_type, x
+	cmp #CHAN_FDS
+	beq @FrequencyReg
+;	cmp #CHAN_VRC7
+;	beq @FrequencyReg
+	cmp #CHAN_N163
+	beq @FrequencyReg
+
+	sec
+	iny
+	lda var_ch_PeriodCalcLo, x
+	sbc (var_Note_Table), y
+	sta var_Temp16
+	iny
+	lda var_ch_PeriodCalcHi, x
+	sbc (var_Note_Table), y
+	sta var_Temp16 + 1
+
+	jsr ft_correct_finepitch
+
+	sec
+	lda var_ch_PeriodCalcLo, x
+	sbc ACC + 1
+	sta var_ch_PeriodCalcLo, x
+	lda var_ch_PeriodCalcHi, x
+	sbc EXT
+	sta var_ch_PeriodCalcHi, x
+@Return:
+	rts
+@FrequencyReg:
+	sec
+	iny
+	lda (var_Note_Table), y
+	sbc var_ch_PeriodCalcLo, x
+	sta var_Temp16
+	iny
+	lda (var_Note_Table), y
+	sbc var_ch_PeriodCalcHi, x
+	sta var_Temp16 + 1
+
+ft_linear__final:
+	jsr ft_correct_finepitch
+
+	clc
+	lda var_ch_PeriodCalcLo, x
+	adc ACC + 1
+	sta var_ch_PeriodCalcLo, x
+	lda var_ch_PeriodCalcHi, x
+	adc EXT
+	sta var_ch_PeriodCalcHi, x
+	rts
+
+ft_correct_finepitch:
+	jsr MUL
+	lda ACC + 1
+	ora EXT
+	bne :+
+	inc ACC + 1
+:	rts
+.endif
 
 ;;; ;; ; Obtain current speed value
 ft_fetch_speed:

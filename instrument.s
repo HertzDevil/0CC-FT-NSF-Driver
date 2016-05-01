@@ -8,7 +8,6 @@ ft_run_instrument:
 	cmp #CHAN_VRC7
 	bne :+
 	rts
-	padjmp	5
 :
 .endif
 	; Volume

@@ -115,7 +115,20 @@ ft_update_n163:
 	bne :-
 	rts
 @Play:
-
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	beq :++
+	jsr ft_load_n163_table
+	lda var_NamcoChannels
+	sta var_Temp3
+	ldx #N163_OFFSET
+:	jsr ft_linear_fetch_pitch
+	inx
+	dec var_Temp3
+	bne :-
+:
+.endif								; ;; ;;;
 	; x = channel
 	ldx #$00
 @ChannelLoop:
@@ -265,7 +278,6 @@ ft_n163_load_wave2:
 	rts
 :										; ;; ;;;
 .if .defined(USE_S5B)		;;; ;; ;
-	padjmp_h	6
 	lda #$0E
 	sta $C000
 .endif						; ;; ;;;
@@ -276,7 +288,6 @@ ft_n163_load_wave2:
 	; Get wave pack pointer
 	lda var_ch_WavePtrLo - N163_OFFSET, x
 	sta var_Temp_Pointer2
-	padjmp	7
 	lda var_ch_WavePtrHi - N163_OFFSET, x
 	sta var_Temp_Pointer2 + 1
 

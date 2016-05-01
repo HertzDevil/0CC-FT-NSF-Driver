@@ -66,7 +66,7 @@ ft_periods_n163: ;; Patch
 ; VRC7
 .if .defined(USE_VRC7)
 ; Fnum table, multiplied by 4 for higher resolution
-.define ft_vrc7_table $02B0, $02DC, $0308, $0334, $0364, $0398, $03D0, $0408, $0448, $0488, $04CC, $0518
+.define ft_vrc7_table $02B0, $02DC, $0308, $0334, $0364, $0398, $03D0, $0408, $0448, $0488, $04CC, $0518, $0560
 
 ft_note_table_vrc7_l: ;; Patch
 	.lobytes ft_vrc7_table

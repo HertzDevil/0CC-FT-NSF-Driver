@@ -93,6 +93,11 @@ ft_effect_table:
 
 ft_load_slide:
 .if .defined(USE_VRC7)
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne :+
+.endif								; ;; ;;;
 	lda ft_channel_type, x			;;; ;; ;
 	cmp #CHAN_VRC7
 	bne :+							; ;; ;;;
@@ -191,6 +196,11 @@ ft_calc_period:
 	sta var_ch_PeriodCalcHi, x
 
 .if .defined(USE_VRC7)
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne :+
+.endif								; ;; ;;;
 	lda ft_channel_type, x
 	cmp #CHAN_VRC7
 	bne :+
@@ -211,6 +221,11 @@ ft_calc_period:
 ;	.if 0
 
 .if .defined(USE_N163)
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne :+
+.endif								; ;; ;;;
 	lda ft_channel_type, x
 	cmp #CHAN_N163
 	bne :+
@@ -372,6 +387,11 @@ ft_portamento_down:
 
 ft_period_add:
 .if .defined(USE_N163)
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne :+
+.endif								; ;; ;;;
     lda ft_channel_type, x
     cmp #CHAN_N163
     bne :+
@@ -396,6 +416,11 @@ ft_period_add:
 :   rts
 ft_period_remove:
 .if .defined(USE_N163)
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne :+
+.endif								; ;; ;;;
     lda ft_channel_type, x
     cmp #CHAN_N163
     bne :+
@@ -407,12 +432,16 @@ ft_period_remove:
 :
 .endif
 	sec
+	padjmp_h	9
 	lda var_ch_TimerPeriodLo, x
 	sbc var_Temp16
 	sta var_ch_TimerPeriodLo, x
+	padjmp		9
+	padjmp_h	5
 	lda var_ch_TimerPeriodHi, x
 	sbc var_Temp16 + 1
 	sta var_ch_TimerPeriodHi, x
+	padjmp		5
 	bcs :+                           ; Do not wrap
 	lda #$00
 	sta var_ch_TimerPeriodLo, x
@@ -481,9 +510,11 @@ ft_arpeggio:
 	cmp #$01
 	beq @LoadSecond
 	cmp #$02
+	padjmp_h	4
 	beq @LoadThird
 	lda var_ch_Note, x					; Load first note
 	jsr ft_translate_freq_only
+	padjmp		4
 	inc var_ch_ArpeggioCycle, x
 	jmp ft_post_effects
 @LoadSecond:							; Second note (second nybble)
@@ -592,6 +623,11 @@ ft_vibrato:
 	lda ft_channel_type, x
 	cmp #CHAN_N163
 	bne @SkipN163
+.if .defined(USE_LINEARPITCH)		;;; ;; ;
+	lda var_SongFlags
+	and #FLAG_LINEARPITCH
+	bne @SkipN163
+.endif								; ;; ;;;
 	asl var_Temp16        ; Multiply by 16
 	rol var_Temp16 + 1
 	asl var_Temp16
@@ -635,23 +671,19 @@ ft_vibrato:
 
 ; Tremolo calculation
 ;
-	padjmp_h	8
 ft_tremolo:
 	lda var_ch_TremoloSpeed, x
 	bne @DoTremolo
 ;	lda var_ch_Volume, x
 ;	sta var_ch_OutVolume, x
 	lda #$00
-	padjmp_h	6
 	sta var_ch_TremoloResult, x
 	rts
-	padjmp	5
 @DoTremolo:
 	clc
 	adc var_ch_TremoloPos, x		; Get next position
 	and #$3F
 	sta var_ch_TremoloPos, x
-	padjmp	4
 	lsr a							; Divide by 2
 	cmp #$10
 	bcc @Phase1
@@ -664,7 +696,6 @@ ft_tremolo:
 	tay
 	lda ft_vibrato_table, y
 	lsr a
-	padjmp_h	4
 	sta var_Temp
 @Calculate:
 	sta var_ch_TremoloResult, x

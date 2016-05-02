@@ -124,7 +124,6 @@ ft_update_n163:
 	sta var_Temp3
 	ldx #N163_OFFSET
 :	jsr ft_linear_fetch_pitch
-	inx
 	dec var_Temp3
 	bne :-
 :

@@ -1504,7 +1504,7 @@ ft_linear_prescale:
 	sta var_Temp
 	rts
 
-ft_linear_fetch_pitch:
+ft_linear_fetch_pitch: ; increments x
 	jsr ft_linear_prescale
 	asl var_ch_PeriodCalcHi, x
 	
@@ -1548,6 +1548,7 @@ ft_linear_fetch_pitch:
 	sbc EXT
 	sta var_ch_PeriodCalcHi, x
 @Return:
+	inx
 	rts
 @FrequencyReg:
 	sec
@@ -1570,6 +1571,7 @@ ft_linear__final:
 	lda var_ch_PeriodCalcHi, x
 	adc EXT
 	sta var_ch_PeriodCalcHi, x
+	inx
 	rts
 
 ft_correct_finepitch:

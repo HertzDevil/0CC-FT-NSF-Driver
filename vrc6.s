@@ -18,9 +18,7 @@ ft_update_vrc6:
 	jsr ft_load_ntsc_table
 	ldx #VRC6_OFFSET
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_load_saw_table
 	jsr ft_linear_fetch_pitch
 :

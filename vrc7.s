@@ -78,6 +78,7 @@ ft_vrc7_linear_fetch_pitch:
 	sta var_Temp16 + 1
 
 	jsr ft_linear__final
+	dex ;
 :	lsr var_ch_PeriodCalcHi, x
 	ror var_ch_PeriodCalcLo, x
 	lsr var_ch_PeriodCalcHi, x
@@ -223,18 +224,10 @@ ft_update_vrc7:
 ft_vrc7_adjust_octave:
 
 	; Get octave
-	lda var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
+	lda #$00		;;; ;; ;
 	sta ACC
-	lda #12
-	sta AUX
-	lda #$00
-	sta ACC + 1
-	sta AUX + 1
-	tya
-	pha
-	jsr DIV
-	pla
-	tay
+	lda var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
+	jsr ft_translate_note_vrc7		; ;; ;;;
 
 	lda	ACC					; if new octave > old octave
 	cmp var_ch_vrc7_OldOctave
@@ -244,19 +237,17 @@ ft_vrc7_adjust_octave:
 	sta var_ch_vrc7_Bnum - VRC7_OFFSET, x
 	sec
 	sbc ACC
-	jsr @ShiftFreq2
-	rts
+	jmp @ShiftFreq2
 :	lda	var_ch_vrc7_OldOctave	; if old octave > new octave
 	cmp ACC
-	bcs @Return
+	bcc :+
+	rts
 	; New octave > old octave, shift down old frequency
-	lda ACC
+:	lda ACC
 	sta var_ch_vrc7_Bnum - VRC7_OFFSET, x
 	sec
 	sbc var_ch_vrc7_OldOctave
-	jsr @ShiftFreq
-@Return:
-	rts
+;	jmp @ShiftFreq
 
 @ShiftFreq:
 	sty var_Temp
@@ -469,12 +460,10 @@ ft_vrc7_load_slide:
 	bne :+
 	lda #EFF_SLIDE_DOWN
 	sta var_ch_Effect, x
-	jsr ft_vrc7_adjust_octave
-	rts
+	jmp ft_vrc7_adjust_octave
 :	lda #EFF_SLIDE_UP
 	sta var_ch_Effect, x
-	jsr ft_vrc7_adjust_octave
-	rts
+	jmp ft_vrc7_adjust_octave
 
 ; Load VRC7 custom patch registers
 ft_load_vrc7_custom_patch:

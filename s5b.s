@@ -85,9 +85,7 @@ ft_update_s5b:
 	jsr ft_load_ntsc_table
 	ldx #S5B_OFFSET
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_linear_fetch_pitch
 :
 .endif								; ;; ;;;

@@ -70,9 +70,7 @@ ft_update_apu:
 @TableLoaded:
 	ldx #APU_OFFSET
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_linear_fetch_pitch
-	inx
 	jsr ft_linear_fetch_pitch
 @End:
 .endif								; ;; ;;;

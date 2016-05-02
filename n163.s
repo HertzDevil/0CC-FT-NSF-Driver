@@ -228,20 +228,19 @@ ft_update_n163:
 	rts
 
 @LoadPeriod:
-	lda var_ch_PeriodCalcLo + N163_OFFSET, x
-	sta var_Temp2
-	lda var_ch_PeriodCalcHi + N163_OFFSET, x
-	sta var_Temp3
 	lda #$00
 	sta var_Temp4
+	lda var_ch_PeriodCalcHi + N163_OFFSET, x
+	sta var_Temp3
+	lda var_ch_PeriodCalcLo + N163_OFFSET, x
 
-	clc
-	rol var_Temp2
+	asl a
 	rol var_Temp3
 	rol var_Temp4
-	rol var_Temp2
+	asl a
 	rol var_Temp3
 	rol var_Temp4
+	sta var_Temp2		;;; ;; ;
 
 .if 0
 	; Compensate for shorter wave lengths
@@ -268,7 +267,7 @@ ft_update_n163:
 	ror var_Temp2
 :
 .endif
-   rts
+	rts
 
 ft_n163_load_wave2:
 	lda var_ch_InstType, x				;;; ;; ;

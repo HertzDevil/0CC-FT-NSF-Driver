@@ -234,14 +234,14 @@ ft_calc_period:
 	sta var_Temp16 + 1
 	lda var_ch_FinePitch, x
 	asl a
+	rol var_Temp16 + 1
+	asl a		;;; ;; ;
+	rol var_Temp16 + 1
+	asl a
+	rol var_Temp16 + 1
+	asl a
+	rol var_Temp16 + 1
 	sta var_Temp16
-	rol var_Temp16 + 1
-	asl var_Temp16
-	rol var_Temp16 + 1
-	asl var_Temp16
-	rol var_Temp16 + 1
-	asl var_Temp16
-	rol var_Temp16 + 1
 	clc
 	lda var_ch_PeriodCalcLo, x
 	adc #$00

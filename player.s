@@ -1171,36 +1171,15 @@ ft_load_freq_table:
 	lda ft_channel_type, x
 .if .defined(USE_N163)
 	cmp #CHAN_N163
-	bne :+
-ft_load_n163_table:
-	lda #<ft_periods_n163		;; Patch
-	sta var_Note_Table
-	lda #>ft_periods_n163
-	sta var_Note_Table + 1
-	rts
-:
+	beq ft_load_n163_table
 .endif
 .if .defined(USE_FDS)
 	cmp #CHAN_FDS
-	bne :+
-ft_load_fds_table:
-	lda #<ft_periods_fds		;; Patch
-	sta var_Note_Table
-	lda #>ft_periods_fds
-	sta var_Note_Table + 1
-	rts
-:
+	beq ft_load_fds_table
 .endif
 .if .defined(USE_VRC6)
 	cmp #CHAN_SAW
-	bne :+
-ft_load_saw_table:
-	lda #<ft_periods_sawtooth	;; Patch
-	sta var_Note_Table
-	lda #>ft_periods_sawtooth
-	sta var_Note_Table + 1
-	rts
-:
+	beq ft_load_saw_table
 .endif
 	; fallthrough
 .endif
@@ -1212,16 +1191,43 @@ ft_load_ntsc_table:
 	lda #>ft_periods_ntsc
 	sta var_Note_Table + 1
 .endif
-	rts								; ;; ;;;
+	rts
 
-.if .defined(PAL_PERIOD_TABLE)		;;; ;; ;
+.if .defined(PAL_PERIOD_TABLE)
 ft_load_pal_table:
 	lda	#<ft_periods_pal		;; Patch
 	sta var_Note_Table
 	lda #>ft_periods_pal
 	sta var_Note_Table + 1
 	rts
-.endif								; ;; ;;;
+.endif
+
+.if .defined(USE_N163)
+ft_load_n163_table:
+	lda #<ft_periods_n163		;; Patch
+	sta var_Note_Table
+	lda #>ft_periods_n163
+	sta var_Note_Table + 1
+	rts
+.endif
+
+.if .defined(USE_VRC6)
+ft_load_saw_table:
+	lda #<ft_periods_sawtooth	;; Patch
+	sta var_Note_Table
+	lda #>ft_periods_sawtooth
+	sta var_Note_Table + 1
+	rts
+.endif
+
+.if .defined(USE_FDS)
+ft_load_fds_table:
+	lda #<ft_periods_fds		;; Patch
+	sta var_Note_Table
+	lda #>ft_periods_fds
+	sta var_Note_Table + 1
+	rts
+.endif									; ;; ;;;
 
 ft_clear_transpose:						;;; ;; ;
 	adc var_ch_Note, x
@@ -1494,13 +1500,14 @@ ft_limit_note:		;;; ;; ;
 
 .if .defined(USE_LINEARPITCH)
 ft_linear_prescale:
-	asl var_ch_PeriodCalcLo, x
-	rol var_ch_PeriodCalcHi, x
-	asl var_ch_PeriodCalcLo, x
-	rol var_ch_PeriodCalcHi, x
-	asl var_ch_PeriodCalcLo, x
-	rol var_ch_PeriodCalcHi, x
 	lda var_ch_PeriodCalcLo, x
+	asl a
+	rol var_ch_PeriodCalcHi, x
+	asl a
+	rol var_ch_PeriodCalcHi, x
+	asl a
+	rol var_ch_PeriodCalcHi, x
+	sta var_ch_PeriodCalcLo, x
 	sta var_Temp
 	rts
 

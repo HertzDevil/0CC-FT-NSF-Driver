@@ -195,16 +195,14 @@ ft_update_fds:
 
 ; Load the waveform, index in A
 ft_load_fds_wave:
-	sta var_Temp16
+	sta var_Temp16 + 1		;;; ;; ;
 	lda #$00
-	sta var_Temp16 + 1
+	sta var_Temp16
 	; Multiply by 64
-	clc
-	ldy #$06
-:	rol var_Temp16
-	rol var_Temp16 + 1
-	dey
-	bne :-
+	lsr var_Temp16 + 1
+	ror var_Temp16
+	lsr var_Temp16 + 1
+	ror var_Temp16
 	; Setup a pointer to the specified wave
 	clc
 	lda var_Wavetables

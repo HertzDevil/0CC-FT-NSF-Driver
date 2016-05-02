@@ -86,7 +86,7 @@ ft_run_instrument:
 	lsr a
 	lsr a
 	lsr a
-	bpl :+++
+	bpl :+++ ; always
 :	cmp #$02					; adding low nybble
 	bne :+
 	lda var_ch_EffParam, x

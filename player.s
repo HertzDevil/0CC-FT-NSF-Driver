@@ -956,8 +956,8 @@ ft_cmd_dac:
 .if .defined(USE_DPCM)
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCMDAC
-	jmp ft_read_note
 .endif
+	jmp ft_read_note
 ; Effect: Duty cycle (Vxx)
 ft_cmd_duty:
 	jsr ft_get_pattern_byte
@@ -976,8 +976,8 @@ ft_cmd_sample_offset:
 .if .defined(USE_DPCM)
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCM_Offset
-	jmp ft_read_note
 .endif
+	jmp ft_read_note
 ; Effect: Slide pitch up
 ft_cmd_slide_up:
 	jsr ft_get_pattern_byte			; Fetch speed / note
@@ -1047,15 +1047,16 @@ ft_cmd_retrigger:
 	bne :+
 	lda var_ch_DPCM_Retrig
 	sta var_ch_DPCM_RetrigCntr
-:	jmp ft_read_note
+:
 .endif
+	jmp ft_read_note
 ; Effect: DPCM pitch setting
 ft_cmd_dpcm_pitch:
 .if .defined(USE_DPCM)
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCM_EffPitch
-	jmp ft_read_note
 .endif
+	jmp ft_read_note
 ; End of effect column commands
 
 ; FDS
@@ -1211,45 +1212,45 @@ ft_load_freq_table:
 
 .if .defined(NTSC_PERIOD_TABLE)
 ft_load_ntsc_table:
-	lda	#<ft_periods_ntsc		;; Patch
+	lda	#<ft_periods_ntsc		;; Reloc
 	sta var_Note_Table
-	lda #>ft_periods_ntsc
+	lda #>ft_periods_ntsc		;; Reloc
 	sta var_Note_Table + 1
 .endif
 	rts
 
 .if .defined(PAL_PERIOD_TABLE)
 ft_load_pal_table:
-	lda	#<ft_periods_pal		;; Patch
+	lda	#<ft_periods_pal		;; Reloc
 	sta var_Note_Table
-	lda #>ft_periods_pal
+	lda #>ft_periods_pal		;; Reloc
 	sta var_Note_Table + 1
 	rts
 .endif
 
 .if .defined(USE_N163)
 ft_load_n163_table:
-	lda #<ft_periods_n163		;; Patch
+	lda #<ft_periods_n163		;; Reloc
 	sta var_Note_Table
-	lda #>ft_periods_n163
+	lda #>ft_periods_n163		;; Reloc
 	sta var_Note_Table + 1
 	rts
 .endif
 
 .if .defined(USE_VRC6)
 ft_load_saw_table:
-	lda #<ft_periods_sawtooth	;; Patch
+	lda #<ft_periods_sawtooth	;; Reloc
 	sta var_Note_Table
-	lda #>ft_periods_sawtooth
+	lda #>ft_periods_sawtooth	;; Reloc
 	sta var_Note_Table + 1
 	rts
 .endif
 
 .if .defined(USE_FDS)
 ft_load_fds_table:
-	lda #<ft_periods_fds		;; Patch
+	lda #<ft_periods_fds		;; Reloc
 	sta var_Note_Table
-	lda #>ft_periods_fds
+	lda #>ft_periods_fds		;; Reloc
 	sta var_Note_Table + 1
 	rts
 .endif									; ;; ;;;

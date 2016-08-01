@@ -178,7 +178,7 @@ ft_update_vrc7:
 
 	; Check release
 	lda var_ch_State + VRC7_OFFSET, x
-	and #$01
+	and #STATE_RELEASE
 	tay
 	lda ft_vrc7_cmd, y
 	sta var_Temp2
@@ -271,6 +271,11 @@ ft_vrc7_adjust_octave:
 
 ; Called when a new note is found from pattern reader
 ft_vrc7_trigger:
+	jsr ft_get_hold_clear		;;; ;; ;
+	beq :+
+	rts
+:	lda #$00
+	sta var_ch_State, x
 
 	lda var_ch_vrc7_Patch - VRC7_OFFSET, x
 	bne @SkipCustomPatch
@@ -360,9 +365,10 @@ ft_vrc7_get_freq:
 
 	pla
 	tay
-
-	lda #$00
-	sta var_ch_State, x
+	
+	lda var_ch_State, x		;;; ;; ;
+	and !STATE_RELEASE
+	sta var_ch_State, x		; ;; ;;;
 
 	; VRC7 patch
 
@@ -398,8 +404,9 @@ ft_vrc7_get_freq_only:
 	lda ACC
 	sta var_ch_vrc7_Bnum - VRC7_OFFSET, x
 
-	lda #$00
-	sta var_ch_State, x
+	lda var_ch_State, x		;;; ;; ;
+	and !STATE_RELEASE
+	sta var_ch_State, x		; ;; ;;;
 
 	pla
 	tay

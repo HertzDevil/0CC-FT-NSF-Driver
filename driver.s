@@ -147,6 +147,11 @@ CHANNELS	= DPCM_OFFSET + .defined(USE_DPCM)
 .endenum
 
 .enum
+	STATE_RELEASE = %00000001
+	STATE_HOLD    = %00000010
+.endenum
+
+.enum
 	FLAG_BANKSWITCH  = %00000001
 	FLAG_OLDVIBRATO  = %00000010
 	FLAG_LINEARPITCH = %00000100
@@ -331,7 +336,7 @@ var_ch_Delay:			.res CHANNELS				; Delay command
 var_ch_NoteCut:			.res CHANNELS
 var_ch_NoteRelease:		.res CHANNELS				;;; ;; ; Delayed note release
 var_ch_Transpose:		.res CHANNELS				;;; ;; ; Delayed transpose
-var_ch_State:			.res CHANNELS
+var_ch_State:			.res CHANNELS				;;; ;; ; overloaded to handle &&
 var_ch_FinePitch:		.res CHANNELS				; Fine pitch setting
 
 var_ch_NoteDelay:		.res CHANNELS				; Delay in rows until next note

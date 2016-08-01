@@ -325,6 +325,7 @@ ft_run_sequence:
 @LoopSequence:						; Just return A
 	pha
 	lda var_ch_State, x
+	and #STATE_RELEASE				;;; ;; ;
 	bne :+
 	pla
 	rts								; Return new index
@@ -341,8 +342,9 @@ ft_run_sequence:
 	lda #$FF
 :	rts
 @ReleasePoint:						; Release point has been reached
-	sta	var_Temp					; Save index
+	sta var_Temp					; Save index
 	lda var_ch_State, x
+	and #STATE_RELEASE				;;; ;; ;
 	bne @Releasing
 	dey
 	lda (var_Temp_Pointer), y		; Check loop point
@@ -410,13 +412,22 @@ ft_reset_instrument:
 :
 .endif
 
+	jsr ft_get_hold_clear		;;; ;; ;
+	bne :+
+.if 0
+	lda var_VolTemp
+	sta var_ch_Volume, x
+	lda #$00
+	sta var_ch_ArpeggioCycle, x
+.endif
+
 	lda #$00
 	sta var_ch_SequencePtr1, x
 	sta var_ch_SequencePtr2, x
 	sta var_ch_SequencePtr3, x
 	sta var_ch_SequencePtr4, x
 	sta var_ch_SequencePtr5, x
-	rts
+:	rts
 
 ; Macros
 

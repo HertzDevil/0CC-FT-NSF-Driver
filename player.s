@@ -209,9 +209,9 @@ ft_skip_row_update:
 :	lda #$00				; ;; ;;;
 	sta var_ch_NoteRelease, x
 	lda var_ch_State, x
-	cmp #$01
+	and #STATE_RELEASE		;;; ;; ;
 	beq @BeginTranspose
-	lda #$01
+	ora #STATE_RELEASE
 	sta var_ch_State, x
 .if .defined(USE_DPCM)
 	lda ft_channel_type, x
@@ -446,7 +446,8 @@ ft_read_note:
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM
 	bne :+
-	lda #$00
+	lda var_ch_State, x
+	and !STATE_RELEASE
 	sta var_ch_State, x			; ;; ;;;
 	jmp @ReadIsDone
 :	; DPCM skip
@@ -469,8 +470,9 @@ ft_read_note:
 .endif									; ;; ;;;
 .endif
 	jsr ft_reset_instrument
-	lda #$00
-	sta var_ch_State, x
+	lda var_ch_State, x		;;; ;; ;
+	and !STATE_RELEASE
+	sta var_ch_State, x			; ;; ;;;
 .if .defined(USE_FDS)		;;; ;; ; removed var_VolTemp
 	lda ft_channel_type, x
 	cmp #CHAN_FDS
@@ -483,8 +485,8 @@ ft_read_note:
 	lda #$0F							; Default max vol is 15
 .endif
 	sta var_ch_Volume, x
-	lda #$00
-	sta var_ch_ArpeggioCycle, x
+;	lda #$00
+;	sta var_ch_ArpeggioCycle, x
 .ifdef USE_S5B		;;; ;; ;
 	lda ft_channel_type, x
 	cpx #CHAN_S5B
@@ -524,9 +526,9 @@ ft_read_note:
 :
 .endif
 	lda var_ch_State, x
-	cmp #$01
+	and #STATE_RELEASE
 	beq @JumpToDone
-	lda #$01
+	ora #STATE_RELEASE
 	sta var_ch_State, x
 .if .defined(USE_VRC7)
 	lda ft_channel_type, x		;;; ;; ;
@@ -651,11 +653,28 @@ ft_push_echo_buffer:		;;; ;; ; Echo buffer store
 	pushEcho ECHO_BUFFER_LENGTH
 	rts
 
+;;; ;; ; 050B
+ft_set_hold:
+	lda var_ch_State, x
+	ora #STATE_HOLD
+	sta var_ch_State, x
+	rts
+ft_get_hold_clear:
+	lda var_ch_State, x
+	and #STATE_HOLD
+	pha
+	eor var_ch_State, x
+	sta var_ch_State, x
+	pla
+	rts
+; ;; ;;;
+
 ;
 ; Command table
 ;
 ft_command_table:
 	.word ft_cmd_instrument
+	.word ft_cmd_hold
 	.word ft_cmd_duration
 	.word ft_cmd_noduration
 	.word ft_cmd_speed
@@ -762,6 +781,9 @@ ft_cmd_expand:
 ft_cmd_instrument:
 	jsr ft_get_pattern_byte
 	jsr ft_load_instrument
+	jmp ft_read_note
+ft_cmd_hold:
+	jsr ft_set_hold
 	jmp ft_read_note
 ; Set default note duration
 ft_cmd_duration:

@@ -45,31 +45,6 @@ ft_load_inst_extra_fds:
 	ldy var_Temp
 	rts							;;; ;; ;
 
-ft_fds_volume:
-	lda var_Temp				; 5x4 multiplication
-	lsr var_Temp2
-	bcs :+
-	lsr a
-:   lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	beq :+
-	rts
-:	lda var_Temp
-	ora var_ch_Volume + FDS_OFFSET
-	beq :+
-	lda #$01					; Round up to 1
-:	rts
-
 ft_init_fds:
 	lda #$00
 	sta $4023
@@ -114,7 +89,8 @@ ft_update_fds:
 	lda var_ch_Volume + FDS_OFFSET			; Kill channel if volume = 0
 	beq @KillFDS
 	sta var_Temp							; 5 bit vol
-	jsr ft_fds_volume
+	ldx #FDS_OFFSET
+	jsr ft_multiply_volume
 	sec
 	sbc var_ch_TremoloResult + FDS_OFFSET
 	bpl :+

@@ -31,9 +31,35 @@ ft_update_vrc6:
 	ora #$80
 	sta var_Temp_Pointer + 1				; ;; ;;;
 	lda var_ch_Note + VRC6_OFFSET, x		; Kill channel if note = off
+	bne :+
+	jmp @KillChan
+	; sawtooth volume handling
+:	cpx #$02								;;; ;; ; 050B
+	bne :+
+	lda var_ch_SeqVolume + SFX_WAVE_CHANS + VRC6_OFFSET, x
+	beq :+
+	sta var_Temp_Pointer2 + 1
+	lda var_ch_SeqVolume + VRC6_OFFSET, x
+	sta var_Temp_Pointer2
+	ldy #$03
+	lda (var_Temp_Pointer2), y
+	sta var_Temp3
+	beq :+
+	lda var_ch_VolColumn + VRC6_OFFSET, x
+	lsr a
+	lsr a
+	lsr a
 	beq @KillChan
+	sta var_Temp2
+	lda var_ch_Volume + VRC6_OFFSET, x
+	beq @KillChan
+	sta var_Temp
+	ldx #(VRC6_OFFSET + 2)
+	jsr ft_multiply_volume
+	ldx #$02
+	jmp @FinishVolume						; ;; ;;;
 	; Load volume
-	lda var_ch_VolColumn + VRC6_OFFSET, x	; Kill channel if volume column = 0
+:	lda var_ch_VolColumn + VRC6_OFFSET, x	; Kill channel if volume column = 0
 	asl a
 	bne :+
 	cpx #$02
@@ -41,12 +67,13 @@ ft_update_vrc6:
 :	and #$F0
 	sta var_Temp
 	lda var_ch_Volume + VRC6_OFFSET, x		; Kill channel if volume = 0
-	bne :+
-	cpx #$02
-	bne @KillChan
-:	ora var_Temp
+	beq @KillChan
+	ora var_Temp
 	tay
 	lda ft_volume_table, y					; Load from the 16*16 volume table
+	cpx #$02
+	beq @FinishVolume
+@FinishVolume:
 	sec
 	sbc var_ch_TremoloResult + VRC6_OFFSET, x
 	bpl :+
@@ -66,9 +93,11 @@ ft_update_vrc6:
 
 	ora ft_duty_table_vrc6, y
 	cpx #$02
+	bne :++
+	ldy var_Temp3		;;; ;; ;
 	bne :+
 	asl a
-	and #$3F
+:	and #$3F
 	; Write to registers
 :	ldy #$00
 	sta (var_Temp_Pointer), y
@@ -87,8 +116,9 @@ ft_update_vrc6:
 @NextChan:
 	inx
 	cpx #CH_COUNT_VRC6
-	bcc @ChannelLoop
-	rts
+	bcs :+
+	jmp @ChannelLoop
+:	rts
 
 ft_duty_table_vrc6:
 .repeat 8, i

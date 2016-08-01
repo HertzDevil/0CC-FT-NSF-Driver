@@ -59,7 +59,7 @@ ft_run_instrument:
 	; 0xy Scheme
 	; adds x offset from 0xy effect when b6 is on, y when b7 is on
 	lda var_sequence_result
-	and #$3F
+	and #$3F					; \x29\x3f\xc9\x25
 	cmp #$25
 	bmi :+						; limit sequence range in [-27,36]
 	sec
@@ -106,7 +106,9 @@ ft_run_instrument:
 	clc
 	lda var_ch_Note, x
 	adc var_sequence_result
-	jsr ft_limit_note
+	bpl :+
+	lda #$01
+:	jsr ft_limit_note
 	sta var_ch_Note, x
 	jmp @ArpDone
 @Fixed:
@@ -153,9 +155,15 @@ ft_run_instrument:
 	beq @SkipPitchUpdate
 	jsr ft_run_sequence
 	sta var_ch_SequencePtr3, x
+	
+	ldy #$03		;;; ;; ; 050B
+	lda (var_Temp_Pointer), y
+	beq :+
+	lda var_ch_Note, x
+	jsr ft_translate_freq_only
 
 	; Check this
-	clc
+:	clc
 	lda var_sequence_result
 	adc var_ch_TimerPeriodLo, x
 	sta var_ch_TimerPeriodLo, x

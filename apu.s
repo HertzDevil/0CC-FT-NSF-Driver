@@ -478,6 +478,33 @@ ft_update_apu:
 @Return:
 	rts
 
+.if .defined(USE_VRC6) || .defined(USE_FDS)
+ft_multiply_volume:		;;; ;; ; 050B
+	lda var_Temp				; 5x4 multiplication
+	lsr var_Temp2
+	bcs :+
+	lsr a
+:   lsr var_Temp2
+	bcc :+
+	adc var_Temp
+:   lsr a
+	lsr var_Temp2
+	bcc :+
+	adc var_Temp
+:   lsr a
+	lsr var_Temp2
+	bcc :+
+	adc var_Temp
+:   lsr a
+	beq :+
+	rts
+:	lda var_Temp
+	ora var_ch_Volume, x
+	beq :+
+	lda #$01					; Round up to 1
+:	rts
+.endif
+
 ; Lookup tables
 
 ft_duty_table:

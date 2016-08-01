@@ -210,7 +210,7 @@ ft_skip_row_update:
 	sta var_ch_NoteRelease, x
 	lda var_ch_State, x
 	and #STATE_RELEASE		;;; ;; ;
-	beq @BeginTranspose
+	bne @BeginTranspose
 	ora #STATE_RELEASE
 	sta var_ch_State, x
 .if .defined(USE_DPCM)
@@ -446,9 +446,7 @@ ft_read_note:
 	lda ft_channel_type, x		;;; ;; ;
 	cmp #CHAN_DPCM
 	bne :+
-	lda var_ch_State, x
-	and !STATE_RELEASE
-	sta var_ch_State, x			; ;; ;;;
+	jsr ft_set_trigger		;;; ;; ;
 	jmp @ReadIsDone
 :	; DPCM skip
 .endif
@@ -470,9 +468,7 @@ ft_read_note:
 .endif									; ;; ;;;
 .endif
 	jsr ft_reset_instrument
-	lda var_ch_State, x		;;; ;; ;
-	and !STATE_RELEASE
-	sta var_ch_State, x			; ;; ;;;
+	jsr ft_set_trigger		;;; ;; ;
 .if .defined(USE_FDS)		;;; ;; ; removed var_VolTemp
 	lda ft_channel_type, x
 	cmp #CHAN_FDS
@@ -527,7 +523,7 @@ ft_read_note:
 .endif
 	lda var_ch_State, x
 	and #STATE_RELEASE
-	beq @JumpToDone
+	bne @JumpToDone
 	ora #STATE_RELEASE
 	sta var_ch_State, x
 .if .defined(USE_VRC7)
@@ -651,6 +647,13 @@ ft_get_pattern_byte:
 ft_push_echo_buffer:		;;; ;; ; Echo buffer store
 	pha
 	pushEcho ECHO_BUFFER_LENGTH
+	rts
+
+;;; ;; ;
+ft_set_trigger:
+	lda var_ch_State, x
+	and !STATE_RELEASE
+	sta var_ch_State, x
 	rts
 
 ;;; ;; ; 050B

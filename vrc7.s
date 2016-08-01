@@ -64,7 +64,7 @@ ft_vrc7_linear_fetch_pitch:
 	sta var_ch_PeriodCalcLo, x
 	lda ft_note_table_vrc7_h, y
 	sta var_ch_PeriodCalcHi, x
-	
+
 	lda var_Temp
 	beq :+
 
@@ -152,7 +152,6 @@ ft_update_vrc7:
 @UpdateChannel:
 	; Load and cache period if there is an active note
 	lda var_ch_Note + VRC7_OFFSET, x
-	beq @SkipPeriod
 	lda var_ch_PeriodCalcLo + VRC7_OFFSET, x
 	sta var_ch_vrc7_FnumLo, x
 	lda var_ch_PeriodCalcHi + VRC7_OFFSET, x
@@ -286,9 +285,10 @@ ft_vrc7_trigger:
 	sta var_CustomPatchPtr + 1
 	jsr ft_load_vrc7_custom_patch
 @SkipCustomPatch:
-	cpx #$06
-	bne :+
-:   lda var_ch_Effect, x
+	lda var_ch_State, x		;;; ;; ;
+	and #STATE_RELEASE
+	bne :++
+	lda var_ch_Effect, x
 	cmp #EFF_PORTAMENTO
 	bne :+
 	lda var_ch_vrc7_Command - VRC7_OFFSET, x
@@ -296,7 +296,8 @@ ft_vrc7_trigger:
 :	lda #VRC7_TRIGGER							; Trigger VRC7 channel
 	sta var_ch_vrc7_Command - VRC7_OFFSET, x
 	; Adjust Fnum if portamento is enabled
-:	lda var_ch_Effect, x
+:	jsr ft_set_trigger		;;; ;; ;
+	lda var_ch_Effect, x
 	cmp #EFF_PORTAMENTO
 	bne @Return
 	; Load portamento
@@ -365,10 +366,7 @@ ft_vrc7_get_freq:
 
 	pla
 	tay
-	
-	lda var_ch_State, x		;;; ;; ;
-	and !STATE_RELEASE
-	sta var_ch_State, x		; ;; ;;;
+	jsr ft_set_trigger		;;; ;; ;
 
 	; VRC7 patch
 
@@ -377,7 +375,6 @@ ft_vrc7_get_freq:
 	beq :+
 	and #$F0
 	sta var_ch_vrc7_Patch - VRC7_OFFSET, x
-	rts
 :;	lda var_ch_vrc7_DefPatch - VRC7_OFFSET, x
 	;sta var_ch_vrc7_Patch - VRC7_OFFSET, x
 	rts
@@ -404,9 +401,7 @@ ft_vrc7_get_freq_only:
 	lda ACC
 	sta var_ch_vrc7_Bnum - VRC7_OFFSET, x
 
-	lda var_ch_State, x		;;; ;; ;
-	and !STATE_RELEASE
-	sta var_ch_State, x		; ;; ;;;
+	jsr ft_set_trigger		;;; ;; ;
 
 	pla
 	tay
@@ -439,7 +434,9 @@ ft_vrc7_load_slide:
 	adc var_Temp
 :	sta var_ch_Note, x
 
-	jsr ft_translate_freq_only
+	sta var_ch_vrc7_ActiveNote - VRC7_OFFSET, x		;;; ;; ;
+	dec var_ch_vrc7_ActiveNote - VRC7_OFFSET, x
+	jsr ft_vrc7_get_freq_only
 
 	lda var_ch_TimerPeriodLo, x
 	sta var_ch_PortaToLo, x

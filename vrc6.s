@@ -36,22 +36,22 @@ ft_update_vrc6:
 	; sawtooth volume handling
 :	cpx #$02								;;; ;; ; 050B
 	bne :+
-	lda var_ch_SeqVolume + SFX_WAVE_CHANS + VRC6_OFFSET, x
+	lda var_ch_SeqVolume + SFX_WAVE_CHANS + VRC6_OFFSET + 2
 	beq :+
 	sta var_Temp_Pointer2 + 1
-	lda var_ch_SeqVolume + VRC6_OFFSET, x
+	lda var_ch_SeqVolume + VRC6_OFFSET + 2
 	sta var_Temp_Pointer2
 	ldy #$03
 	lda (var_Temp_Pointer2), y
 	sta var_Temp3
 	beq :+
-	lda var_ch_VolColumn + VRC6_OFFSET, x
+	lda var_ch_VolColumn + VRC6_OFFSET + 2
 	lsr a
 	lsr a
 	lsr a
 	beq @KillChan
 	sta var_Temp2
-	lda var_ch_Volume + VRC6_OFFSET, x
+	lda var_ch_Volume + VRC6_OFFSET + 2
 	beq @KillChan
 	sta var_Temp
 	ldx #(VRC6_OFFSET + 2)

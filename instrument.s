@@ -593,21 +593,19 @@ ft_limit_freq:
 
 
 ft_limit_pointers:			;;; ;; ; 0CC: optimize this
-	.word ft_limit_period_2a03	     ; 2A03
-	.word ft_limit_period_2a03	     ; 2A03
-	.word ft_limit_period_2a03	     ; 2A03
-	.word ft_limit_period_2a03	     ; 2A03
-	.word ft_limit_period_vrc6	     ; VRC6
-	.word ft_limit_period_vrc6	     ; VRC6
-	.word ft_limit_period_vrc7	     ; VRC7
-	.word ft_limit_period_vrc6	     ; FDS
-	.word ft_limit_period_2a03	     ; MMC5
-	.word ft_limit_period_n163	     ; N163
-	.word ft_limit_period_vrc6	     ;;; ;; ; S5B
+	.word ft_limit_period_2a03		; 2A03
+	.word ft_limit_period_2a03		; 2A03
+	.word ft_limit_period_no		; 2A03 noise
+	.word ft_limit_period_no		; 2A03 dpcm
+	.word ft_limit_period_vrc6		; VRC6
+	.word ft_limit_period_vrc6		; VRC6
+	.word ft_limit_period_no		; VRC7
+	.word ft_limit_period_vrc6		; FDS
+	.word ft_limit_period_2a03		; MMC5
+	.word ft_limit_period_no		; N163
+	.word ft_limit_period_vrc6		;;; ;; ; S5B
 
-; N163: no limits
-ft_limit_period_n163:
-ft_limit_period_vrc7:
+ft_limit_period_no:
 	rts
 
 ; 2A03: period is between 0 to $7FF

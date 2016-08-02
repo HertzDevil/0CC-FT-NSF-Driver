@@ -371,6 +371,7 @@ ft_read_pattern:
 .endif
 
 ft_read_note:
+	nop									;;; ;; ;
 	lda (var_Temp_Pattern), y			; Read pattern command
 	bpl :+
 	jmp @Effect
@@ -597,6 +598,10 @@ ft_read_note:
 	sta var_Temp_Pointer + 1
 	ldy var_Temp
 	iny
+	lda #>ft_read_note					;; Reloc
+	pha
+	lda #<ft_read_note					;; Reloc
+	pha
 	jmp (var_Temp_Pointer)				; And jump there
 @ReadIsDone:
 	lda var_ch_DefaultDelay, x			; See if there's a default delay
@@ -652,7 +657,7 @@ ft_push_echo_buffer:		;;; ;; ; Echo buffer store
 ;;; ;; ;
 ft_set_trigger:
 	lda var_ch_State, x
-	and !STATE_RELEASE
+	and #($FF - STATE_RELEASE)
 	sta var_ch_State, x
 	rts
 
@@ -677,7 +682,8 @@ ft_get_hold_clear:
 ;
 ft_command_table:
 	.word ft_cmd_instrument
-	.word ft_cmd_hold
+;	.word ft_cmd_hold
+	.word ft_set_hold
 	.word ft_cmd_duration
 	.word ft_cmd_noduration
 	.word ft_cmd_speed
@@ -777,66 +783,63 @@ ft_cmd_expand:
 	sta var_ch_LoopCounter, x
 	iny							; number of loops, ignore
 	iny							; length in bytes, ignore
-	jmp ft_read_note
+	rts
 .endif
 
 ; Change instrument
 ft_cmd_instrument:
 	jsr ft_get_pattern_byte
-	jsr ft_load_instrument
-	jmp ft_read_note
-ft_cmd_hold:
-	jsr ft_set_hold
-	jmp ft_read_note
+	jmp ft_load_instrument
+;;; ;; ; 050B
+;ft_cmd_hold:
+;	jsr ft_set_hold
+;	rts
 ; Set default note duration
 ft_cmd_duration:
 	jsr ft_get_pattern_byte
 	sta var_ch_DefaultDelay, x
-	jmp ft_read_note
+	rts
 ; No default note duration
 ft_cmd_noduration:
 	lda #$FF
 	sta var_ch_DefaultDelay, x
-	jmp ft_read_note
+	rts
 ; Effect: Speed (Fxx)
 ft_cmd_speed:
 	jsr ft_get_pattern_byte
 	sta var_Speed
 	lda #$00					;;; ;; ;
 	sta var_GroovePointer		; ;; ;;;
-	jsr ft_calculate_speed
-	jmp ft_read_note
+	jmp ft_calculate_speed
 ; Effect: Tempo (Fxx)
 ft_cmd_tempo:
 	jsr ft_get_pattern_byte
 	sta var_Tempo
-	jsr ft_calculate_speed
-	jmp ft_read_note
+	jmp ft_calculate_speed
 ;;; ;; ; Effect: Groove (Oxx)
 ft_cmd_groove:
 	jsr ft_get_pattern_byte
 	sta var_GroovePointer
 	lda #$00
 	sta var_Speed
-	jsr ft_calculate_speed
-	jmp ft_read_note
+	jmp ft_calculate_speed
 ; Effect: Jump (Bxx)
 ft_cmd_jump:
 	jsr ft_get_pattern_byte
 	sta var_Jump
-	jmp ft_read_note
+	rts
 ; Effect: Skip (Dxx)
 ft_cmd_skip:
 	jsr ft_get_pattern_byte
 	sta var_Skip
-	jmp ft_read_note
+	rts
 ; Effect: Halt (Cxx)
 ft_cmd_halt:
 	jsr ft_get_pattern_byte
 	lda var_PlayerFlags
 	ora #%00000010
 	sta var_PlayerFlags
-	jmp ft_read_note
+	rts
 ;;; ;; ; Effect: Hardware envelope control (Exx)
 ft_cmd_effvolume:
 	jsr ft_get_pattern_byte
@@ -855,28 +858,28 @@ ft_cmd_effvolume:
 	and #%11111000
 :	ora var_Temp
 	sta var_ch_LengthCounter, x
-	jmp ft_read_note
+	rts
 ; Effect: Portamento (3xx)
 ft_cmd_portamento:
 	jsr ft_get_pattern_byte
 	sta var_ch_EffParam, x
 	lda #EFF_PORTAMENTO
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ; Effect: Portamento up (1xx)
 ft_cmd_porta_up:
 	jsr ft_get_pattern_byte
 	sta var_ch_EffParam, x
 	lda #EFF_PORTA_UP
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ; Effect: Portamento down (2xx)
 ft_cmd_porta_down:
 	jsr ft_get_pattern_byte
 	sta var_ch_EffParam, x
 	lda #EFF_PORTA_DOWN
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ; Effect: Arpeggio (0xy)
 ft_cmd_arpeggio:
 	jsr ft_get_pattern_byte
@@ -885,19 +888,19 @@ ft_cmd_arpeggio:
 ;	sta var_ch_ArpeggioCycle, x
 	lda #EFF_ARPEGGIO
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ft_cmd_clear:
 	lda #$00
 	sta var_ch_EffParam, x
 	sta var_ch_Effect, x
 	sta var_ch_PortaToLo, x
 	sta var_ch_PortaToHi, x
-	jmp ft_read_note
+	rts
 ; Effect: Hardware sweep (Hxy / Ixy)
 ft_cmd_sweep:
 	jsr ft_get_pattern_byte
 	sta var_Sweep
-	jmp ft_read_note
+	rts
 ; Effect: Vibrato (4xy)
 ft_cmd_vibrato:
 	jsr ft_get_pattern_byte
@@ -920,7 +923,7 @@ ft_cmd_vibrato:
 	pla
 	and #$0F
 	sta var_ch_VibratoSpeed, x
-	jmp ft_read_note
+	rts
 ; Effect: Tremolo (7xy)
 ft_cmd_tremolo:
 	jsr ft_get_pattern_byte
@@ -932,21 +935,23 @@ ft_cmd_tremolo:
 	sta var_ch_TremoloSpeed, x
 	cmp #$00
 	beq @ResetTremolo
-	jmp ft_read_note
+	rts
 @ResetTremolo:					; Clear tremolo
 	sta var_ch_TremoloPos, x
-	jmp ft_read_note
+	rts
 ; Effect: Pitch (Pxx)
 ft_cmd_pitch:
 	jsr ft_get_pattern_byte
 	sta var_ch_FinePitch, x
-	jmp ft_read_note
+	rts
 ft_cmd_reset_pitch:
 	lda #$80
 	sta var_ch_FinePitch, x
-	jmp ft_read_note
+	rts
 ; Effect: Delay (Gxx)
 ft_cmd_delay:
+	pla							; discard return destination
+	pla
 	jsr ft_get_pattern_byte
 	sta var_ch_Delay, x
 	dey
@@ -957,7 +962,7 @@ ft_cmd_dac:
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCMDAC
 .endif
-	jmp ft_read_note
+	rts
 ; Effect: Duty cycle (Vxx)
 ft_cmd_duty:
 	jsr ft_get_pattern_byte
@@ -967,31 +972,31 @@ ft_cmd_duty:
 	lda ft_channel_type, x
 	cmp #CHAN_N163
 	bne :+
-	jsr ft_n163_load_wave2
+	jmp ft_n163_load_wave2
 :
 .endif
-	jmp ft_read_note
+	rts
 ; Effect: Sample offset
 ft_cmd_sample_offset:
 .if .defined(USE_DPCM)
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCM_Offset
 .endif
-	jmp ft_read_note
+	rts
 ; Effect: Slide pitch up
 ft_cmd_slide_up:
 	jsr ft_get_pattern_byte			; Fetch speed / note
 	sta var_ch_EffParam, x
 	lda #EFF_SLIDE_UP_LOAD
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ; Effect: Slide pitch down
 ft_cmd_slide_down:
 	jsr ft_get_pattern_byte			; Fetch speed / note
 	sta var_ch_EffParam, x
 	lda #EFF_SLIDE_DOWN_LOAD
 	sta var_ch_Effect, x
-	jmp ft_read_note
+	rts
 ; Effect: Volume slide
 ft_cmd_vol_slide:
 	jsr ft_get_pattern_byte			; Fetch speed / note
@@ -999,7 +1004,7 @@ ft_cmd_vol_slide:
 	bne :+							;;; ;; ;
 	lda var_ch_VolColumn, x
 	sta var_ch_VolDefault, x		; ;; ;;;
-:	jmp ft_read_note
+:	rts
 ; Effect: Note cut (Sxx)
 ft_cmd_note_cut:
 	jsr ft_get_pattern_byte
@@ -1014,30 +1019,30 @@ ft_cmd_note_cut:
 	lda var_ch_LengthCounter + APU_TRI
 	and #%11111100
 	sta var_ch_LengthCounter + APU_TRI		; ;; ;;;
-:	jmp ft_read_note
+:	rts
 ft_cmd_linear_counter:				;;; ;; ;
 	jsr ft_get_pattern_byte
 	sta var_Linear_Counter
 	lda var_ch_LengthCounter + APU_TRI
 	ora #%00000001
 	sta var_ch_LengthCounter + APU_TRI
-	jmp ft_read_note				; ;; ;;;
+	rts								; ;; ;;;
 ;;; ;; ; Effect: Note release (Lxx)
 ft_cmd_note_release:
 	jsr ft_get_pattern_byte
 	ora #$80
 	sta var_ch_NoteRelease, x
-	jmp ft_read_note
+	rts
 ;;; ;; ; Delayed channel volume (Mxy)
 ft_cmd_delayed_volume:
 	jsr ft_get_pattern_byte
 	sta var_ch_VolDelay, x
-	jmp ft_read_note
+	rts
 ;;; ;; ; Effect: Delayed transpose (Txy)
 ft_cmd_transpose:
 	jsr ft_get_pattern_byte
 	sta var_ch_Transpose, x
-	jmp ft_read_note
+	rts
 ; Effect: Retrigger
 ft_cmd_retrigger:
 .if .defined(USE_DPCM)
@@ -1049,14 +1054,14 @@ ft_cmd_retrigger:
 	sta var_ch_DPCM_RetrigCntr
 :
 .endif
-	jmp ft_read_note
+	rts
 ; Effect: DPCM pitch setting
 ft_cmd_dpcm_pitch:
 .if .defined(USE_DPCM)
 	jsr ft_get_pattern_byte
 	sta var_ch_DPCM_EffPitch
 .endif
-	jmp ft_read_note
+	rts
 ; End of effect column commands
 
 ; FDS
@@ -1068,7 +1073,7 @@ ft_cmd_fds_mod_depth:
 	lda var_ch_ModEffWritten
 	ora #$01
 	sta var_ch_ModEffWritten
-	jmp ft_read_note
+	rts
 @AutoFM:
 	sta var_Temp
 	lda var_ch_ModRate + 1
@@ -1076,7 +1081,7 @@ ft_cmd_fds_mod_depth:
 	lda var_Temp ; using auto-fm
 	ora #$80
 	sta var_ch_ModRate + 1
-:	jmp ft_read_note			; ;; ;;;
+:	rts							; ;; ;;;
 ft_cmd_fds_mod_rate_hi:
 	jsr ft_get_pattern_byte
 	sta var_Temp
@@ -1091,8 +1096,7 @@ ft_cmd_fds_mod_rate_hi:
 	bpl :+
 	lda #$00
 	sta var_ch_ModRate
-:
-	jmp ft_read_note
+:	rts
 @AutoFM:
 	lsr a
 	lsr a
@@ -1104,7 +1108,7 @@ ft_cmd_fds_mod_rate_hi:
 	and #$0F
 	sta var_ch_ModRate
 	inc var_ch_ModRate
-	jmp ft_read_note			; ;; ;;;
+	rts							; ;; ;;;
 ft_cmd_fds_mod_rate_lo:
 	jsr ft_get_pattern_byte
 	sta var_ch_ModEffRate + 0
@@ -1115,15 +1119,15 @@ ft_cmd_fds_mod_rate_lo:
 	bpl :+
 	lda #$00
 	sta var_ch_ModRate + 1
-:	jmp ft_read_note
+:	rts
 ft_cmd_fds_volume:		;;; ;; ;
 	jsr ft_get_pattern_byte
 	sta var_ch_FDSVolume
-	jmp ft_read_note	; ;; ;;;
+	rts					; ;; ;;;
 ft_cmd_fds_mod_bias:
 	jsr ft_get_pattern_byte
 	sta var_ch_ModBias
-	jmp ft_read_note	; ;; ;;;
+	rts					; ;; ;;;
 .endif
 
 ; VRC7
@@ -1132,7 +1136,7 @@ ft_cmd_vrc7_patch_change:
 	jsr ft_get_pattern_byte
 	sta var_ch_vrc7_EffPatch
 	sta var_ch_vrc7_Patch - VRC7_OFFSET, x
-	jmp ft_read_note
+	rts
 .endif
 
 ; N163
@@ -1151,8 +1155,7 @@ ft_cmd_n163_wave_buffer:
 	sta var_ch_WaveLen - N163_OFFSET, x
 	lda var_ch_WavePosOld - N163_OFFSET, x
 	sta var_ch_WavePos - N163_OFFSET, x
-:	jsr ft_n163_load_wave2
-	jmp ft_read_note
+:	jmp ft_n163_load_wave2
 .endif						; ;; ;;;
 
 ; S5B
@@ -1163,7 +1166,7 @@ ft_cmd_s5b_env_type:
 	jsr ft_get_pattern_byte
 	sta var_EnvelopeType
 	sta $E000
-	jmp ft_read_note
+	rts
 ft_cmd_s5b_env_rate_hi:
 	lda #$0C
 	sta $C000
@@ -1174,7 +1177,7 @@ ft_cmd_s5b_env_rate_hi:
 	sta $C000
 	lda var_EnvelopeType
 	sta $E000
-	jmp ft_read_note
+	rts
 ft_cmd_s5b_env_rate_lo:
 	lda #$0B
 	sta $C000
@@ -1185,7 +1188,7 @@ ft_cmd_s5b_env_rate_lo:
 	sta $C000
 	lda var_EnvelopeType
 	sta $E000
-	jmp ft_read_note
+	rts
 .endif						; ;; ;;;
 
 ;

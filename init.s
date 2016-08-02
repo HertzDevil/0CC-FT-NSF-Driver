@@ -594,9 +594,9 @@ ft_SkipToRow:
 @Effect:
 	cmp #$80
 	beq @LoadInstCmd
-	cmp #$82
-	beq @EffectDuration
 	cmp #$84
+	beq @EffectDuration
+	cmp #$86
 	beq @EffectNoDuration
 	cmp #$F0							; See if volume
 	bcs @OneByteCommand
@@ -604,9 +604,9 @@ ft_SkipToRow:
 	bcs @LoadInst
 ;	cmp #$8E
 ;	beq @OneByteCommand
-	cmp #$92
+	cmp #$94
 	beq @OneByteCommand
-	cmp #$A2
+	cmp #$A4
 	beq @OneByteCommand
 	iny									; Command takes two bytes
 @OneByteCommand:						; Command takes one byte

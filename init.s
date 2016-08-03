@@ -539,10 +539,12 @@ ft_SkipToRow:
 	sta var_Temp2
 	jmp @Finished
 
+@EffectDispatch:		;;; ;; ;
+	jsr @Effect
 @NoRowDelay:
 	; Read a row
 	lda (var_Temp_Pattern), y
-	bmi @Effect
+	bmi @EffectDispatch
 
 	lda var_ch_DefaultDelay, x
 	cmp #$FF
@@ -611,30 +613,30 @@ ft_SkipToRow:
 	iny									; Command takes two bytes
 @OneByteCommand:						; Command takes one byte
 	iny
-	jmp @NoRowDelay						; A new command or note is immediately following
+	rts									; A new command or note is immediately following
 @EffectDuration:
 	iny
 	lda (var_Temp_Pattern), y
 	iny
 	sta var_ch_DefaultDelay, x
-	jmp @NoRowDelay
+	rts
 @EffectNoDuration:
 	iny
 	lda #$FF
 	sta var_ch_DefaultDelay, x
-	jmp @NoRowDelay
+	rts
 @LoadInstCmd:    ; mult-byte
 	iny
 	lda (var_Temp_Pattern), y
 	iny
 	sta var_Temp3
-	jmp @NoRowDelay
+	rts
 @LoadInst:       ; single byte
 	iny
 	and #$0F
 	asl a
 	sta var_Temp3
-	jmp @NoRowDelay						;;; ;; ; var_ch_NoteDelay remains unaltered
+	rts									;;; ;; ; var_ch_NoteDelay remains unaltered
 
 .else   ; ENABLE_ROW_SKIP
 	rts

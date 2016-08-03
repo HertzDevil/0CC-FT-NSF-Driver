@@ -2,35 +2,30 @@
 ; Updates the APU registers. x and y are free to use
 ;
 
-.if 0
-; Found this on nesdev bbs by blargg,
-; this can replace the volume table but takes a little more CPU
-ft_get_volume:
-
-	lda var_ch_VolColumn, x
-	lsr a
-	lsr a
-	lsr a
-	sta var_Temp
-	lda var_ch_Volume, x
-	sta var_Temp2
-
-	lda var_Temp				; 4x4 multiplication
+; calculates FLOOR(((var_Temp + 1) * (var_Temp2 + 1) - 1) / 16)
+; 4 effective bits for var_Temp2, each block adds one
+.if .defined(USE_VRC6) || .defined(USE_FDS)
+ft_multiply_volume:		;;; ;; ; 050B
+	lda var_Temp
 	lsr var_Temp2
 	bcs :+
 	lsr a
-:   lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
+:
 	lsr var_Temp2
 	bcc :+
 	adc var_Temp
-:   lsr a
+:	lsr a
+
 	lsr var_Temp2
 	bcc :+
 	adc var_Temp
-:   lsr a
+:	lsr a
+
+	lsr var_Temp2
+	bcc :+
+	adc var_Temp
+:	lsr a
+
 	beq :+
 	rts
 :	lda var_Temp
@@ -477,33 +472,6 @@ ft_update_apu:
 .endif
 @Return:
 	rts
-
-.if .defined(USE_VRC6) || .defined(USE_FDS)
-ft_multiply_volume:		;;; ;; ; 050B
-	lda var_Temp				; 5x4 multiplication
-	lsr var_Temp2
-	bcs :+
-	lsr a
-:   lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	lsr var_Temp2
-	bcc :+
-	adc var_Temp
-:   lsr a
-	beq :+
-	rts
-:	lda var_Temp
-	ora var_ch_Volume, x
-	beq :+
-	lda #$01					; Round up to 1
-:	rts
-.endif
 
 ; Lookup tables
 

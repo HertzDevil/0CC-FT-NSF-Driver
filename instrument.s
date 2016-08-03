@@ -334,15 +334,13 @@ ft_run_sequence:
 	pha
 	lda var_ch_State, x
 	and #STATE_RELEASE				;;; ;; ;
-	bne :+
-	pla
+	bne :++
+:	pla
 	rts								; Return new index
 :	ldy #$02						; Check release point
 	lda (var_Temp_Pointer), y
-	bne :+
-	pla								; Release point not found, loop
-	rts
-:	sta var_Temp					;;; ;; ;
+	beq :--							; Release point not found, loop
+	sta var_Temp					;;; ;; ;
 	dec var_Temp
 	pla								; Release point found, don't loop
 	cmp var_Temp

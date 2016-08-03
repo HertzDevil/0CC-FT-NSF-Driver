@@ -432,16 +432,12 @@ ft_period_remove:
 :
 .endif
 	sec
-	padjmp_h	9
 	lda var_ch_TimerPeriodLo, x
 	sbc var_Temp16
 	sta var_ch_TimerPeriodLo, x
-	padjmp		9
-	padjmp_h	5
 	lda var_ch_TimerPeriodHi, x
 	sbc var_Temp16 + 1
 	sta var_ch_TimerPeriodHi, x
-	padjmp		5
 	bcs :+                           ; Do not wrap
 	lda #$00
 	sta var_ch_TimerPeriodLo, x
@@ -510,11 +506,9 @@ ft_arpeggio:
 	cmp #$01
 	beq @LoadSecond
 	cmp #$02
-	padjmp_h	4
 	beq @LoadThird
 	lda var_ch_Note, x					; Load first note
 	jsr ft_translate_freq_only
-	padjmp		4
 	inc var_ch_ArpeggioCycle, x
 	jmp ft_post_effects
 @LoadSecond:							; Second note (second nybble)
@@ -551,14 +545,18 @@ ft_vibrato:
 	bne :+
 	rts
 :	clc
+	padjmp_h	9
 	adc var_ch_VibratoPos, x		; Get next position
 	and #$3F
 	sta var_ch_VibratoPos, x
+	padjmp_h	5
 	cmp #$10
+	padjmp		7
 	bcc @Phase1
 	cmp #$20
 	bcc @Phase2
 	cmp #$30
+	padjmp		5
 	bcc @Phase3
 	; Phase 4: - 15 - (Phase - 48) + depth
 	eor #$3F
@@ -572,6 +570,7 @@ ft_vibrato:
 	tay
 	lda ft_vibrato_table, y
 	sta var_Temp16
+	padjmp_h	4
 	lda #$00
 	sta var_Temp16 + 1
 	jmp @Calculate
@@ -579,6 +578,7 @@ ft_vibrato:
 	; Phase 3: - (Phase - 32) + depth
 	and #$DF
 @Negate:
+	padjmp		5
 	ora var_ch_VibratoDepth, x
 	tay
 	lda ft_vibrato_table, y

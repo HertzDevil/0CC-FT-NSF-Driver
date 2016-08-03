@@ -1,23 +1,7 @@
-;
-; The NSF music driver for FamiTracker
-; Version 2.11
-; By jsr (jsr@famitracker.com)
-; assemble with ca65
-;
-; Documentation is in readme.txt
-;
-; Tab stop is 4
-;
-;
-; ToDo;
-;  - Confirm all chip combinations work
-;  - Optimize code for Dxx effect
-;
-; Known bugs:
-;  - Txy does not work properly during a Qxy / Rxy effect
-;
-
-
+;;; ;; ;
+;;; ;; ; 0CC-FamiTracker NSF Driver
+;;; ;; ; By HertzDevil
+;;; ;; ;
 
 ;
 ; Assembler code switches
@@ -413,7 +397,7 @@ last_bss_var:			.res 1						; Not used
 ; $9010
 ; $9030
 ; $A000 - $A002
-.macro padjmp count
+.macro padjmp count ; headerless padding
 .local @end
 .if .defined(USE_ALL)
  .ifndef PACKAGE
@@ -431,7 +415,7 @@ last_bss_var:			.res 1						; Not used
 .endif
 @end:
 .endmacro
-.macro padjmp_h count
+.macro padjmp_h count ; headered padding
 .local @end
 .if .defined(USE_ALL)
  .ifdef PACKAGE

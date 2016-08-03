@@ -7,6 +7,11 @@ ft_init_s5b:
 	sta var_ch_DutyDefault + S5B_OFFSET
 	sta var_ch_DutyDefault + S5B_OFFSET + 1
 	sta var_ch_DutyDefault + S5B_OFFSET + 2
+	lda #$FF
+	sta var_AutoEnv_Channel
+	lda #$00
+	sta var_EnvelopeRate
+	sta var_EnvelopeRate + 1
 	lda #$07
 	sta $C000
 	lda #%00111000
@@ -17,66 +22,46 @@ ft_init_s5b:
 ft_update_s5b:
 	lda var_PlayerFlags
 	bne :+
-	lda #$08
-	sta $C000
-	lda #$00
+	ldx #$08
+	stx $C000
 	sta $E000
-	inc $C000
-	lda #$00
+	inx
+	stx $C000
 	sta $E000
-	inc $C000
-	lda #$00
+	inx
+	stx $C000
 	sta $E000
 	rts
 :
 	ldx #$00
-@UpdateDuty:
+	stx var_Pul_Noi
+@UpdateNoise:
 	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	bpl :+									; no noise
 	and #$1F
 	sta var_Noise_Period
-:	lda var_ch_DutyCurrent + S5B_OFFSET, x
-	and #$20								; E
-	lsr
-	sta var_ch_5B_Env_Enable, x
-	inx
+:	inx
 	cpx #CH_COUNT_S5B
-	bcc @UpdateDuty
+	bcc @UpdateNoise
 
-	ldx #$00
+	ldx #(CH_COUNT_S5B - 1)
+@UpdateNoiseMask:
+	asl var_Pul_Noi
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
+	bmi :+
+	inc var_Pul_Noi
+:	dex
+	bpl @UpdateNoiseMask
+
+	ldx #(CH_COUNT_S5B - 1)
 @UpdateToneMask:
+	asl var_Pul_Noi
 	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	and #$40
-	beq :+
-	lda var_Pul_Noi
-	eor #$FF
-	ora bit_mask, x
-	eor #$FF
-	sta var_Pul_Noi
-	bpl :++ ; always
-:	lda var_Pul_Noi
-	ora bit_mask, x
-	sta var_Pul_Noi
-:	inx
-	cpx #CH_COUNT_S5B
-	bcc @UpdateToneMask
-
-	ldx #$00
-@UpdateNoiseMask:
-	lda var_ch_DutyCurrent + S5B_OFFSET, x
-	bpl :+
-	lda var_Pul_Noi
-	eor #$FF
-	ora bit_mask + CH_COUNT_S5B, x
-	eor #$FF
-	sta var_Pul_Noi
-	bpl :++ ; always
-:	lda var_Pul_Noi
-	ora bit_mask + CH_COUNT_S5B, x
-	sta var_Pul_Noi
-:	inx
-	cpx #CH_COUNT_S5B
-	bcc @UpdateNoiseMask
+	bne :+
+	inc var_Pul_Noi
+:	dex
+	bpl @UpdateToneMask
 
 .if .defined(USE_LINEARPITCH)		;;; ;; ;
 	lda var_SongFlags
@@ -95,8 +80,9 @@ ft_update_s5b:
 	lda var_ch_Note + S5B_OFFSET, x				; Kill channel if note = off
 	bne :+
 	txa
-	clc
-	adc #$08
+	ora #$08
+;	clc
+;	adc #$08
 	sta $C000
 	lda #$00
 	sta $E000
@@ -105,8 +91,9 @@ ft_update_s5b:
 	bpl @S5B_next ; always
 	; Load volume
 :	txa
-	clc
-	adc #$08
+	ora #$08
+;	clc
+;	adc #$08
 	sta $C000
 	lda var_ch_VolColumn + S5B_OFFSET, x
 	beq @StoreVolume
@@ -125,13 +112,17 @@ ft_update_s5b:
 	bpl :+
 	lda #$00
 :	bne :+
-	lda var_ch_VolColumn + N163_OFFSET, x
+	lda var_ch_VolColumn + S5B_OFFSET, x
 	beq :+
 	lda #$01
 :
 @StoreVolume:
 	; Volume / envelope enable
-	ora var_ch_5B_Env_Enable, x
+	sta var_Temp
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
+	and #$20								; E
+	lsr
+	ora var_Temp
 	sta $E000
 	; Frequency
 	inc var_ch_PeriodCalcLo + S5B_OFFSET, x		; correction
@@ -145,18 +136,91 @@ ft_update_s5b:
 	iny
 	lda var_ch_PeriodCalcHi + S5B_OFFSET, x
 	sta $E000
+	
+	lda var_ch_DutyCurrent + S5B_OFFSET, x
+	and #$20
+	beq @S5B_next
+	lda var_ch_Trigger + S5B_OFFSET, x
+	beq @S5B_next
+	sta var_EnvelopeTrigger ; should be 1 anyway
 @S5B_next:
 	inx
 	cpx #CH_COUNT_S5B
 	bcc @ChannelLoop
 
 	; Global variables
-	lda #$06
-	sta $C000
+	ldx #$06
+	stx $C000
 	lda var_Noise_Period
 	sta $E000
-	lda #$07
-	sta $C000
+	inx
+	stx $C000
 	lda var_Pul_Noi
 	sta $E000
-	rts
+
+	ldx var_AutoEnv_Channel
+	bpl @AutoEnv
+	ldx #$0B
+	stx $C000
+	lda var_EnvelopeRate
+	sta $E000
+	inx
+	stx $C000
+	lda var_EnvelopeRate + 1
+	sta $E000
+	jmp @Finished
+
+@AutoEnv:
+	lda var_ch_PeriodCalcLo, x
+	sta var_Temp16
+	lda var_ch_PeriodCalcHi, x
+	sta var_Temp16 + 1
+
+	lda var_EnvelopeType		;;; ;; ; 050B
+	lsr
+	lsr
+	lsr
+	lsr
+	cmp #$08
+	beq @Write
+	bcc @LowerOctave
+@RaiseOctave:
+	sec
+	sbc #$08
+	tay
+:	lsr var_Temp16 + 1
+	ror var_Temp16
+	dey
+	bne :-
+	beq @Write ; always
+@LowerOctave:
+	sta var_Temp
+	sec
+	lda #$08
+	sbc var_Temp
+	tay
+:	asl var_Temp16
+	rol var_Temp16 + 1
+	dey
+	bne :-
+@Write:
+	ldx #$0B
+	stx $C000
+	lda var_Temp16
+	sta $E000
+	inx
+	stx $C000
+	lda var_Temp16 + 1
+	sta $E000
+
+@Finished:
+	lda var_EnvelopeTrigger
+	beq :+
+	lda #$00
+	sta var_EnvelopeTrigger
+	lda #$0D
+	sta $C000
+	lda var_EnvelopeType
+	and #$0F
+	sta $E000
+:	rts

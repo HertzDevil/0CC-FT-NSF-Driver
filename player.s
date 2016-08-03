@@ -1161,33 +1161,24 @@ ft_cmd_n163_wave_buffer:
 ; S5B
 .if .defined(USE_S5B)		;;; ;; ;
 ft_cmd_s5b_env_type:
-	lda #$0D
-	sta $C000
+	lda #$01
+	sta var_EnvelopeTrigger
 	jsr ft_get_pattern_byte
 	sta var_EnvelopeType
-	sta $E000
+	and #$F0
+	bne :+
+	lda #$FF
+	sta var_AutoEnv_Channel
+	rts
+:	stx var_AutoEnv_Channel
 	rts
 ft_cmd_s5b_env_rate_hi:
-	lda #$0C
-	sta $C000
 	jsr ft_get_pattern_byte
 	sta var_EnvelopeRate + 1
-	sta $E000
-	lda #$0D
-	sta $C000
-	lda var_EnvelopeType
-	sta $E000
 	rts
 ft_cmd_s5b_env_rate_lo:
-	lda #$0B
-	sta $C000
 	jsr ft_get_pattern_byte
 	sta var_EnvelopeRate
-	sta $E000
-	lda #$0D
-	sta $C000
-	lda var_EnvelopeType
-	sta $E000
 	rts
 .endif						; ;; ;;;
 

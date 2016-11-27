@@ -192,7 +192,11 @@ ft_update_s5b:
 	ror var_Temp16
 	dey
 	bne :-
-	beq @Write ; always
+	bcc @Write
+	inc var_Temp16
+	bne @Write
+	inc var_Temp16 + 1
+	bne @Write ; always
 @LowerOctave:
 	sta var_Temp
 	sec

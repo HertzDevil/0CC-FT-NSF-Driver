@@ -185,15 +185,14 @@ var_ch_DPCM_EffPitch:	.res 1
 
 .if .defined(USE_VRC7)
 var_ch_vrc7_CustomPatch: .res 1						; Keep track of the custom patch
-var_ch_vrc7_Patch:		 .res CH_COUNT_VRC7			; VRC7 patch
-var_ch_vrc7_DefPatch:	 .res CH_COUNT_VRC7
+;;; ;; ; removed, since other chips also use 2 bytes for duty
 var_ch_vrc7_FnumLo:		 .res CH_COUNT_VRC7
 var_ch_vrc7_FnumHi:		 .res CH_COUNT_VRC7
 var_ch_vrc7_Bnum:		 .res CH_COUNT_VRC7
 var_ch_vrc7_ActiveNote:	 .res CH_COUNT_VRC7
 var_ch_vrc7_Command:	 .res CH_COUNT_VRC7			; 0 = halt, 1 = trigger, 80 = update
 var_ch_vrc7_OldOctave:	 .res 1						; Temp variable for old octave when triggering new notes
-var_ch_vrc7_EffPatch:	 .res 1						; V-command
+var_ch_vrc7_EffPatch:	 .res CH_COUNT_VRC7			;;; ;; ; V-command
 
 var_ch_vrc7_CustomHi:    .res CH_COUNT_VRC7
 var_ch_vrc7_CustomLo:    .res CH_COUNT_VRC7
@@ -336,6 +335,8 @@ var_ch_PeriodCalcLo:	.res EFF_CHANS 				; Frequency after fine pitch and vibrato
 var_ch_PeriodCalcHi:	.res EFF_CHANS
 ;var_ch_OutVolume:		.res EFF_CHANS				; Volume for the APU
 var_ch_VolSlide:		.res EFF_CHANS				;;; ;; ; Volume slide
+var_ch_DutyDefault:		.res EFF_CHANS				;;; ;; ; Duty cycle / Noise mode
+var_ch_DutyCurrent:		.res EFF_CHANS				; ;; ;;; do not rely on bitwise operations
 
 ; --- Testing ---
 ;var_ch_LoopCounter:		.res CHANNELS
@@ -352,8 +353,6 @@ var_ch_SeqPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 3: Pitch bend
 var_ch_SeqHiPitch:		.res SFX_WAVE_CHANS * 2		; Sequence 4: High speed pitch bend
 var_ch_SeqDutyCycle:	.res SFX_WAVE_CHANS * 2		; Sequence 5: Duty cycle / Noise Mode
 var_ch_Volume:			.res SFX_WAVE_CHANS			; Output volume
-var_ch_DutyDefault:		.res SFX_WAVE_CHANS			;;; ;; ; Duty cycle / Noise mode
-var_ch_DutyCurrent:		.res SFX_WAVE_CHANS			; ;; ;;; do not rely on bitwise operations
 var_ch_SequencePtr1:	.res SFX_WAVE_CHANS			; Index pointers for sequences
 var_ch_SequencePtr2:	.res SFX_WAVE_CHANS
 var_ch_SequencePtr3:	.res SFX_WAVE_CHANS

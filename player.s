@@ -365,10 +365,6 @@ ft_read_pattern:
 	sta var_Temp_Pattern
 	lda var_ch_PatternAddrHi, x
 	sta var_Temp_Pattern + 1
-.if .defined(USE_VRC7)
-	lda #$FF
-	sta var_ch_vrc7_EffPatch
-.endif
 
 ft_read_note:
 	nop									;;; ;; ;
@@ -456,7 +452,7 @@ ft_read_note:
 	cmp #CHAN_VRC7
 	bne :+
 	jsr ft_vrc7_trigger
-	jmp @ResetSlide
+	jmp @RestoreDuty
 :	; VRC7 skip
 .endif
 .if 0
@@ -489,6 +485,7 @@ ft_read_note:
 	cpx #CHAN_S5B
 	beq @ResetSlide
 .endif				; ;; ;;;
+@RestoreDuty:
 	lda var_ch_DutyDefault, x
 	sta var_ch_DutyCurrent, x
 
@@ -718,7 +715,9 @@ ft_command_table:
 	.word ft_cmd_delayed_volume
 	.word ft_cmd_transpose				; ;; ;;;
 .if .defined(USE_VRC7)
-	;.word ft_cmd_vrc7_patch_change
+	.word ft_cmd_vrc7_patch_change
+	.word ft_cmd_vrc7_port
+	.word ft_cmd_vrc7_write
 .endif
 .if .defined(USE_FDS)
 	.word ft_cmd_fds_mod_depth
@@ -734,6 +733,7 @@ ft_command_table:
 	.word ft_cmd_s5b_env_type
 	.word ft_cmd_s5b_env_rate_hi
 	.word ft_cmd_s5b_env_rate_lo
+	.word ft_cmd_s5b_noise
 .endif				; ;; ;;;
 ;	.word ft_cmd_expand
 
@@ -1062,7 +1062,18 @@ ft_cmd_dpcm_pitch:
 	sta var_ch_DPCM_EffPitch
 .endif
 	rts
-; End of effect column commands
+
+; VRC7
+.if .defined(USE_VRC7)
+ft_cmd_vrc7_patch_change:
+	jsr ft_get_pattern_byte
+	sta var_ch_vrc7_EffPatch - VRC7_OFFSET, x
+	rts
+ft_cmd_vrc7_port:
+	rts
+ft_cmd_vrc7_write:
+	rts
+.endif
 
 ; FDS
 .if .defined(USE_FDS)
@@ -1130,15 +1141,6 @@ ft_cmd_fds_mod_bias:
 	rts					; ;; ;;;
 .endif
 
-; VRC7
-.if .defined(USE_VRC7)
-ft_cmd_vrc7_patch_change:
-	jsr ft_get_pattern_byte
-	sta var_ch_vrc7_EffPatch
-	sta var_ch_vrc7_Patch - VRC7_OFFSET, x
-	rts
-.endif
-
 ; N163
 .if .defined(USE_N163)		;;; ;; ;
 ft_cmd_n163_wave_buffer:
@@ -1179,6 +1181,8 @@ ft_cmd_s5b_env_rate_hi:
 ft_cmd_s5b_env_rate_lo:
 	jsr ft_get_pattern_byte
 	sta var_EnvelopeRate
+	rts
+ft_cmd_s5b_noise:
 	rts
 .endif						; ;; ;;;
 
@@ -1675,8 +1679,18 @@ ft_calculate_speed:
 	sta var_Tempo_Modulus
 	sta var_Tempo_Modulus + 1
 	jmp @EndCalc				; ;; ;;;
+:
 	; Multiply by 24
-:	sta AUX
+.if .defined(USE_MMC5) && .defined(USE_MMC5_MULTIPLIER)
+	sta $5205
+	lda #$18
+	sta $5206
+	lda $5205
+	sta ACC
+	lda $5206
+	sta ACC + 1
+.else
+	sta AUX
 	lda #$00
 	sta AUX + 1
 	ldy #$03
@@ -1697,6 +1711,7 @@ ft_calculate_speed:
 	tya
 	adc AUX + 1
 	sta ACC + 1
+.endif
 
 	; divide by speed
 	jsr ft_fetch_speed			;;; ;; ;

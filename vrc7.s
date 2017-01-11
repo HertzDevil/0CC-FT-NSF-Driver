@@ -11,8 +11,8 @@ ft_load_instrument_vrc7:
 	; Read VRC7 instrument
 	ldy #$01									;;; ;; ; skip inst type
 	lda (var_Temp_Pointer), y		            ; Load patch number
-	sta var_ch_vrc7_Patch - VRC7_OFFSET, x		; vrc7 channel offset
-	sta var_ch_vrc7_DefPatch - VRC7_OFFSET, x
+	sta var_ch_DutyCurrent, x					;;; ;; ; renamed
+	sta var_ch_DutyDefault, x
 	bne :+							            ; Skip custom settings if patch > 0
 
 	; Store path to custom patch settings
@@ -37,6 +37,11 @@ ft_init_vrc7:
 	inx
 	cpx #$3F
 	bne :-
+	ldx #$05
+	lda #$FF
+:	sta var_ch_vrc7_EffPatch, x
+	dex
+	bpl :-
 	rts
 
 ft_translate_note_vrc7:
@@ -186,6 +191,15 @@ ft_update_vrc7:
 	txa
 	adc #$30	; $30: Patch & Volume
 	sta $9010
+
+	lda var_ch_vrc7_EffPatch, x		;;; ;; ;
+	cmp #$FF
+	beq :+
+	sta var_ch_DutyCurrent + VRC7_OFFSET, x
+	lda #$FF
+	sta var_ch_vrc7_EffPatch, x
+:									; ;; ;;;
+
 	lda var_ch_VolColumn + VRC7_OFFSET, x
 	lsr a
 	lsr a
@@ -195,7 +209,7 @@ ft_update_vrc7:
 	bpl :+
 	lda #$00
 :	eor #$0F
-	ora var_ch_vrc7_Patch, x
+	ora var_ch_DutyCurrent + VRC7_OFFSET, x
 	sta $9030
 	jsr ft_vrc7_delay
 
@@ -276,7 +290,7 @@ ft_vrc7_trigger:
 :	lda #$00
 	sta var_ch_State, x
 
-	lda var_ch_vrc7_Patch - VRC7_OFFSET, x
+	lda var_ch_DutyCurrent, x
 	bne @SkipCustomPatch
 
 	lda var_ch_vrc7_CustomLo - VRC7_OFFSET, x
@@ -366,18 +380,7 @@ ft_vrc7_get_freq:
 
 	pla
 	tay
-	jsr ft_set_trigger		;;; ;; ;
-
-	; VRC7 patch
-
-	lda var_ch_vrc7_EffPatch
-	cmp #$FF
-	beq :+
-	and #$F0
-	sta var_ch_vrc7_Patch - VRC7_OFFSET, x
-:;	lda var_ch_vrc7_DefPatch - VRC7_OFFSET, x
-	;sta var_ch_vrc7_Patch - VRC7_OFFSET, x
-	rts
+	jmp ft_set_trigger		;;; ;; ;
 
 ft_vrc7_get_freq_only:
 	tya

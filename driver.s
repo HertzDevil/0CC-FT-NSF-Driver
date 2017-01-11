@@ -184,7 +184,6 @@ var_ch_DPCM_EffPitch:	.res 1
 .endif
 
 .if .defined(USE_VRC7)
-var_ch_vrc7_CustomPatch: .res 1						; Keep track of the custom patch
 ;;; ;; ; removed, since other chips also use 2 bytes for duty
 var_ch_vrc7_FnumLo:		 .res CH_COUNT_VRC7
 var_ch_vrc7_FnumHi:		 .res CH_COUNT_VRC7
@@ -200,7 +199,6 @@ var_CustomPatchPtr:		 .res 2
 .endif
 
 .if .defined(USE_FDS)
-var_ch_Wave:			.res 1						; Index to wave table
 var_ch_ModDelay:		.res 1
 var_ch_ModDepth:		.res 1
 var_ch_ModRate:			.res 2
@@ -212,11 +210,9 @@ var_ch_ModInstRate:		.res 2		;;; ;; ;
 var_ch_ModEffWritten:	.res 1
 var_ch_FDSVolume:		.res 1		;;; ;; ;
 var_ch_ModBias:			.res 1		;;; ;; ;
-var_Wave_pointer:		.res 2
 .endif
 
 .if .defined(USE_N163)
-;var_ch_Wave:            .res 8
 var_ch_WavePtrLo:       .res CH_COUNT_N163
 var_ch_WavePtrHi:       .res CH_COUNT_N163
 var_ch_WaveLen:         .res CH_COUNT_N163			;;; ;; ; MSB is used for N163 Yxx

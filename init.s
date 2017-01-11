@@ -296,9 +296,6 @@ ft_load_song:
 	stx var_ch_PrevFreqHighMMC5
 	stx var_ch_PrevFreqHighMMC5 + 1
 .endif
-.if .defined(USE_VRC7)
-	stx var_ch_vrc7_CustomPatch
-.endif
 
 	inx								; Jump to the first frame
 	stx var_Current_Frame

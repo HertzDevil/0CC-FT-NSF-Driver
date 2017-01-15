@@ -229,11 +229,12 @@ var_NamcoInstrument:    .res CH_COUNT_N163
 
 .if .defined(USE_S5B)								;;; ;; ;
 var_Noise_Period:		.res 1						; $06
+var_Noise_Prev:			.res 1						; cache noise value
 var_Pul_Noi:			.res 1						; $07
 var_EnvelopeRate:		.res 2						; $0B, $0C
 var_EnvelopeType:		.res 1						; $0D
 var_AutoEnv_Channel:	.res 1						;;; ;; ; 050B
-var_EnvelopeTrigger:	.res 1						; Jxy issued
+var_EnvelopeTrigger:	.res 1						; Hxy issued
 .endif												; ;; ;;;
 
 last_zp_var:			.res 1						; Not used

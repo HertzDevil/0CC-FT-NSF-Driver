@@ -1183,6 +1183,8 @@ ft_cmd_s5b_env_rate_lo:
 	sta var_EnvelopeRate
 	rts
 ft_cmd_s5b_noise:
+	jsr ft_get_pattern_byte
+	sta var_Noise_Period
 	rts
 .endif						; ;; ;;;
 

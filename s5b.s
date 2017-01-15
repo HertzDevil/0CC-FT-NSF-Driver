@@ -8,6 +8,7 @@ ft_init_s5b:
 	sta var_ch_DutyDefault + S5B_OFFSET + 1
 	sta var_ch_DutyDefault + S5B_OFFSET + 2
 	lda #$FF
+	sta var_Noise_Prev
 	sta var_AutoEnv_Channel
 	lda #$00
 	sta var_EnvelopeRate
@@ -36,6 +37,8 @@ ft_update_s5b:
 	ldx #$00
 	stx var_Pul_Noi
 @UpdateNoise:
+	lda var_ch_Trigger + S5B_OFFSET, x
+	beq :+
 	lda var_ch_DutyCurrent + S5B_OFFSET, x
 	bpl :+									; no noise
 	and #$1F
@@ -146,14 +149,19 @@ ft_update_s5b:
 @S5B_next:
 	inx
 	cpx #CH_COUNT_S5B
-	bcc @ChannelLoop
-
+	bcs :+
+	jmp @ChannelLoop
+:
 	; Global variables
 	ldx #$06
-	stx $C000
 	lda var_Noise_Period
+	eor #$1F
+	cmp var_Noise_Prev
+	beq :+
+	sta var_Noise_Prev
+	stx $C000
 	sta $E000
-	inx
+:	inx
 	stx $C000
 	lda var_Pul_Noi
 	sta $E000

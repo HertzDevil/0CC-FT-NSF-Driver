@@ -438,11 +438,8 @@ last_bss_var:			.res 1						; Not used
 .if MULTICHIP		;;; ;; ;
 .macro CH_LOOP_START target
 	stx var_currentChannel
-	lda ft_channel_type, x
-	tax
 	lda ft_channel_enable, x
 	jeq target
-	ldx var_currentChannel
 .endmacro
 .else
 .macro CH_LOOP_START target
@@ -579,15 +576,28 @@ ft_channel_type:
 
 .if MULTICHIP		;;; ;; ;
 ft_channel_enable: ;; Patch
-	.byte 1, 1, 1
-	.byte .defined(USE_DPCM)
-	.byte .defined(USE_VRC6)
-	.byte .defined(USE_VRC6)
-	.byte .defined(USE_VRC7)
-	.byte .defined(USE_FDS)
+	.byte 1, 1, 1, 1
+.repeat CH_COUNT_MMC5
 	.byte .defined(USE_MMC5)
+.endrep
+.if .defined(USE_VRC6)
+	.byte .defined(USE_VRC6)
+.endif
+.repeat CH_COUNT_N163		; 0CC: check
 	.byte .defined(USE_N163)
+.endrep
+.repeat CH_COUNT_FDS
+	.byte .defined(USE_FDS)
+.endrep
+.repeat CH_COUNT_S5B
 	.byte .defined(USE_S5B)
+.endrep
+.repeat CH_COUNT_VRC7
+	.byte .defined(USE_VRC7)
+.endrep
+.if .defined(USE_DPCM)
+	.byte 1
+.endif
 .endif
 
 bit_mask:		;;; ;; ; general-purpose bit mask

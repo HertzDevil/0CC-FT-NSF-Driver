@@ -66,7 +66,7 @@ ft_do_row_update:
 	beq @DelayEpilog
 	lda #$00
 	sta var_ch_Delay, x
-	jsr ft_read_pattern
+	jsr ft_read_pattern ; skip over missed delay note
 @DelayEpilog:
 	CH_LOOP_END @Delay
 	
@@ -80,12 +80,7 @@ ft_do_row_update:
 	ldx #$00
 ft_read_channels:
 	CH_LOOP_START ft_read_channels_epilog
-	lda var_ch_Delay, x
-	beq :+
-	lda #$00
-	sta var_ch_Delay, x
-	jsr ft_read_pattern                 ; In case a delayed note has not been played, skip it to get next note
-:	jsr ft_read_pattern					; Get new notes
+	jsr ft_read_pattern					; Get new notes
 ft_read_channels_epilog:
 	CH_LOOP_END ft_read_channels
 
@@ -246,7 +241,6 @@ ft_loop_fx_state_epilog:
 
 	; Update channel instruments and effects
 	ldx #$00
-
 ; Loop through wave channels
 ft_loop_channels:
 	CH_LOOP_START ft_loop_channels_epilog
@@ -657,42 +651,43 @@ ft_get_hold_clear:
 ; Command table
 ;
 ft_command_table:
-	.word ft_cmd_instrument
+	.word ft_cmd_instrument			; 80
 ;	.word ft_cmd_hold
-	.word ft_set_hold
-	.word ft_cmd_duration
-	.word ft_cmd_noduration
-	.word ft_cmd_speed
-	.word ft_cmd_tempo
-	.word ft_cmd_jump
-	.word ft_cmd_skip
-	.word ft_cmd_halt
-	.word ft_cmd_effvolume
-	.word ft_cmd_clear
-	.word ft_cmd_porta_up
-	.word ft_cmd_porta_down
-	.word ft_cmd_portamento
-	.word ft_cmd_arpeggio
-	.word ft_cmd_vibrato
-	.word ft_cmd_tremolo
-	.word ft_cmd_pitch
-	.word ft_cmd_reset_pitch
-	.word ft_cmd_duty
-	.word ft_cmd_delay
-	.word ft_cmd_sweep
-	.word ft_cmd_dac
-	.word ft_cmd_sample_offset
-	.word ft_cmd_slide_up
-	.word ft_cmd_slide_down
-	.word ft_cmd_vol_slide
-	.word ft_cmd_note_cut
-	.word ft_cmd_retrigger
-	.word ft_cmd_dpcm_pitch
-	.word ft_cmd_note_release			;;; ;; ;
-	.word ft_cmd_linear_counter
-	.word ft_cmd_groove
-	.word ft_cmd_delayed_volume
-	.word ft_cmd_transpose				; ;; ;;;
+	.word ft_set_hold				; 82
+	.word ft_cmd_duration			; 84
+	.word ft_cmd_noduration			; 86
+	.word ft_cmd_speed				; 88
+	.word ft_cmd_tempo				; 8A
+	.word ft_cmd_jump				; 8C
+	.word ft_cmd_skip				; 8E
+	.word ft_cmd_halt				; 90
+	.word ft_cmd_effvolume			; 92
+	.word ft_cmd_clear				; 94
+	.word ft_cmd_porta_up			; 96
+	.word ft_cmd_porta_down			; 98
+	.word ft_cmd_portamento			; 9A
+	.word ft_cmd_arpeggio			; 9C
+	.word ft_cmd_vibrato			; 9E
+	.word ft_cmd_tremolo			; A0
+	.word ft_cmd_pitch				; A2
+	.word ft_cmd_reset_pitch		; A4
+	.word ft_cmd_duty				; A6
+	.word ft_cmd_delay				; A8
+	.word ft_cmd_sweep				; AA
+	.word ft_cmd_dac				; AC
+	.word ft_cmd_sample_offset		; AE
+	.word ft_cmd_slide_up			; B0
+	.word ft_cmd_slide_down			; B2
+	.word ft_cmd_vol_slide			; B4
+	.word ft_cmd_note_cut			; B6
+	.word ft_cmd_retrigger			; B8
+	.word ft_cmd_dpcm_pitch			; BA
+	;;; ;; ;
+	.word ft_cmd_note_release		; BC
+	.word ft_cmd_linear_counter		; BE
+	.word ft_cmd_groove				; C0
+	.word ft_cmd_delayed_volume		; C2
+	.word ft_cmd_transpose			; C4
 .if .defined(USE_VRC7)
 	.word ft_cmd_vrc7_patch_change
 	.word ft_cmd_vrc7_port

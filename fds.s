@@ -164,7 +164,6 @@ ft_update_fds:
 	bpl @NoKill								; ;; ;;;
 	lda #$80
 	sta $4080	; Make channel silent
-	lda #$80
 	sta $4084
 	sta $4087
 	rts
@@ -202,7 +201,6 @@ ft_load_fds_wave:
 ft_reset_modtable:
 	lda #$80
 	sta $4087
-	lda #$00
 	sta $4085
 	rts
 

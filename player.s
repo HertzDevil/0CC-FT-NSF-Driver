@@ -327,8 +327,8 @@ ft_read_pattern:
 	rts									; And skip
 :	sty var_Sweep						; Y = 0
 .if .defined(USE_BANKSWITCH)
-	; First setup the bank
-	lda var_ch_Bank, x
+	;;; ;; ; First setup the bank
+	lda var_InitialBank
 	beq :+
 	jsr ft_bankswitch
 :	; Go on
@@ -337,6 +337,13 @@ ft_read_pattern:
 	sta var_Temp_Pattern
 	lda var_ch_PatternAddrHi, x
 	sta var_Temp_Pattern + 1
+.if .defined(USE_BANKSWITCH)
+	;;; ;; ; Then etup the pattern bank
+	lda var_ch_Bank, x
+	beq :+
+	jsr ft_bankswitch
+:
+.endif
 
 ft_read_note:
 	nop									;;; ;; ;

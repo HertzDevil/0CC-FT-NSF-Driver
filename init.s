@@ -449,8 +449,11 @@ ft_load_frame:
 ;	sta var_ch_LoopCounter, x
 	lda #$FF
 	sta var_ch_DefaultDelay, x
+	bmi :+ ; always
 @LoadPatternAddrEpilog:
-	CH_LOOP_END @LoadPatternAddr
+	iny
+	iny
+:	CH_LOOP_END @LoadPatternAddr
 ; Bankswitch values
 .if .defined(USE_BANKSWITCH)
 	lda var_SongFlags					; Check bankswitch flag
@@ -461,8 +464,8 @@ ft_load_frame:
 	CH_LOOP_START @LoadBankValuesEpilog
 	lda (var_Temp_Pointer), y			; Pattern bank number
 	sta var_ch_Bank, x
-	iny
 @LoadBankValuesEpilog:
+	iny
 	CH_LOOP_END @LoadBankValues
 @SkipBankValues:
 .endif

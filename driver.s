@@ -578,7 +578,7 @@ ft_channel_type:
 .endif
 
 .if MULTICHIP		;;; ;; ;
-ft_channel_enable:
+ft_channel_enable: ;; Patch
 	.byte 1, 1, 1
 	.byte .defined(USE_DPCM)
 	.byte .defined(USE_VRC6)

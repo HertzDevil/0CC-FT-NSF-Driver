@@ -35,7 +35,7 @@ ft_multiply_volume:		;;; ;; ; 050B
 :	rts
 .endif
 
-ft_update_apu:
+ft_update_2a03:
 	lda var_PlayerFlags
 	bne @Play
 	lda #$00					; Kill all channels

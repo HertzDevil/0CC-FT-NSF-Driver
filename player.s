@@ -18,6 +18,7 @@ ft_music_play:
 	; Run delayed channels
 	ldx #$00
 @ChanLoop:
+	CH_LOOP_START @ChanLoopEpilog
 	lda var_ch_Delay, x
 	beq @SkipDelay
 	sec
@@ -25,13 +26,12 @@ ft_music_play:
 	sta var_ch_Delay, x
 	bne @SkipDelay
 	jsr ft_read_pattern					; Read the delayed note
-	jmp :+ ; ;; ;;;
+	jmp @ChanLoopEpilog		; ;; ;;;
 @SkipDelay:
 	lda #$00							;;; ;; ; Clear note trigger flag
 	sta var_ch_Trigger, x				; ;; ;;;
-:	inx
-	CPX_ALL_CHANNELS
-	bne @ChanLoop
+@ChanLoopEpilog:
+	CH_LOOP_END @ChanLoop
 
 	; Speed division
 	lda var_Tempo_Accum + 1
@@ -60,14 +60,15 @@ ft_do_row_update:
 	beq @SkipFrameLoad
 	;;; ;; ; from 0.4.6
 	ldx #$00
-:	lda var_ch_Delay, x
-	beq :+
+@Delay:
+	CH_LOOP_START @DelayEpilog
+	lda var_ch_Delay, x
+	beq @DelayEpilog
 	lda #$00
 	sta var_ch_Delay, x
 	jsr ft_read_pattern
-:	inx
-	CPX_ALL_CHANNELS
-	bne :--
+@DelayEpilog:
+	CH_LOOP_END @Delay
 	
 	lda #$00
 	sta var_Load_Frame
@@ -78,18 +79,15 @@ ft_do_row_update:
 	; Read one row from all patterns
 	ldx #$00
 ft_read_channels:
-@UpdateChan:
+	CH_LOOP_START ft_read_channels_epilog
 	lda var_ch_Delay, x
 	beq :+
 	lda #$00
 	sta var_ch_Delay, x
 	jsr ft_read_pattern                 ; In case a delayed note has not been played, skip it to get next note
 :	jsr ft_read_pattern					; Get new notes
-	inx ; ;; ;;;
-
-	CPX_ALL_CHANNELS
-
-	bne ft_read_channels
+ft_read_channels_epilog:
+	CH_LOOP_END ft_read_channels
 
 	; Should jump?
 	lda var_Jump
@@ -146,6 +144,7 @@ ft_skip_row_update:
 
 	ldx #$00
 ft_loop_fx_state:
+	CH_LOOP_START ft_loop_fx_state_epilog
 	; Note cut effect (Sxx)
 	lda var_ch_NoteCut, x
 	beq @BeginRelease
@@ -241,18 +240,24 @@ ft_loop_fx_state:
 	asl a
 	asl a
 	sta var_ch_VolDelay, x
-:	; ;; ;;;
-	inx
-
-	CPX_ALL_CHANNELS
-	beq :+
-	jmp ft_loop_fx_state					; branch
+:
+ft_loop_fx_state_epilog:
+	CH_LOOP_END ft_loop_fx_state		; ;; ;;;
 
 	; Update channel instruments and effects
-:	ldx #$00
+	ldx #$00
 
 ; Loop through wave channels
 ft_loop_channels:
+	CH_LOOP_START ft_loop_channels_epilog
+.if .defined(USE_ALL)		;;; ;; ; Skip DPCM
+	cpx #EFF_CHANS
+.elseif .defined(USE_N163)
+	cpx var_EffChannels
+.else
+	cpx #EFF_CHANS
+.endif
+	beq ft_update_apu
 
 	; Do channel effects, like portamento and vibrato
 	jsr ft_run_effects
@@ -282,21 +287,12 @@ ft_loop_channels:
 	sbc #$10
 	sta var_ch_VolDelay, x
 :
-	; ;; ;;;
+ft_loop_channels_epilog:		; ;; ;;;
+	CH_LOOP_END ft_loop_channels
 
-	inx
-	;cpx #WAVE_CHANS		; Skip DPCM
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #EFF_CHANS
-.elseif .defined(USE_N163)
-	cpx var_EffChannels
-.else
-	cpx #EFF_CHANS
-.endif
-	bne ft_loop_channels
-
+ft_update_apu:
 	; Finally update APU and expansion chip registers
-	jsr ft_update_apu
+	jsr ft_update_2a03
 ft_update_ext:		;; Patch
 .if .defined(USE_VRC6)
 	jsr	ft_update_vrc6

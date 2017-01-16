@@ -156,6 +156,7 @@ var_Temp_Pointer:		.res 2						; Temporary
 var_Temp_Pointer2:		.res 2
 var_Temp_Pattern:		.res 2						; Pattern address (temporary)
 var_Note_Table:			.res 2
+var_currentChannel:		.res 1						;;; ;; ;
 
 ACC:					.res 2						; Used by division routine
 AUX:					.res 2
@@ -391,6 +392,7 @@ last_bss_var:			.res 1						; Not used
 
 
 .segment "CODE"
+.include "longbranch.mac"		;;; ;; ;
 
 ; $9000 - $9003
 ; $9010
@@ -431,6 +433,28 @@ last_bss_var:			.res 1						; Not used
  .endif
 .endif
 @end:
+.endmacro
+
+.if MULTICHIP		;;; ;; ;
+.macro CH_LOOP_START target
+	stx var_currentChannel
+	lda ft_channel_type, x
+	tax
+	lda ft_channel_enable, x
+	jeq target
+	ldx var_currentChannel
+.endmacro
+.else
+.macro CH_LOOP_START target
+	stx var_currentChannel
+.endmacro
+.endif
+
+.macro CH_LOOP_END target
+	ldx var_currentChannel
+	inx
+	CPX_ALL_CHANNELS
+	jne target
 .endmacro
 
 .macro CPX_ALL_CHANNELS
@@ -551,6 +575,19 @@ ft_channel_type:
 .endrep
 .if .defined(USE_DPCM)
 	.byte CHAN_DPCM
+.endif
+
+.if MULTICHIP		;;; ;; ;
+ft_channel_enable:
+	.byte 1, 1, 1
+	.byte .defined(USE_DPCM)
+	.byte .defined(USE_VRC6)
+	.byte .defined(USE_VRC6)
+	.byte .defined(USE_VRC7)
+	.byte .defined(USE_FDS)
+	.byte .defined(USE_MMC5)
+	.byte .defined(USE_N163)
+	.byte .defined(USE_S5B)
 .endif
 
 bit_mask:		;;; ;; ; general-purpose bit mask

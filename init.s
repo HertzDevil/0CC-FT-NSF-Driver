@@ -424,6 +424,7 @@ ft_load_frame:
 	ldy #$00							; Y = address
 	stx var_Pattern_Pos
 @LoadPatternAddr:
+	CH_LOOP_START @LoadPatternAddrEpilog
 .if .defined(RELOCATE_MUSIC)
 	clc
 	lda (var_Temp_Pointer), y			; Load the pattern address for the channel
@@ -448,9 +449,8 @@ ft_load_frame:
 ;	sta var_ch_LoopCounter, x
 	lda #$FF
 	sta var_ch_DefaultDelay, x
-	inx
-	CPX_ALL_CHANNELS
-	bne @LoadPatternAddr
+@LoadPatternAddrEpilog:
+	CH_LOOP_END @LoadPatternAddr
 ; Bankswitch values
 .if .defined(USE_BANKSWITCH)
 	lda var_SongFlags					; Check bankswitch flag
@@ -458,12 +458,12 @@ ft_load_frame:
 	beq @SkipBankValues					; Skip if no bankswitch info is stored
 	ldx #$00
 @LoadBankValues:
+	CH_LOOP_START @LoadBankValuesEpilog
 	lda (var_Temp_Pointer), y			; Pattern bank number
 	sta var_ch_Bank, x
 	iny
-	inx
-	CPX_ALL_CHANNELS
-	bne @LoadBankValues
+@LoadBankValuesEpilog:
+	CH_LOOP_END @LoadBankValues
 @SkipBankValues:
 .endif
 
@@ -483,6 +483,7 @@ ft_SkipToRow:
 	sta var_Pattern_Pos
 	ldx #$00							; x = channel
 @ChannelLoop:
+	CH_LOOP_START @ChannelLoopEpilog
 .if .defined(USE_BANKSWITCH)			;;; ;; ; perform bankswitching
 	lda var_ch_Bank, x
 	beq :+
@@ -502,7 +503,6 @@ ft_SkipToRow:
 	sta var_Temp_Pattern + 1
 
 @RowLoop:
-
 	lda var_ch_NoteDelay, x				; First check if in the middle of a row delay
 	beq @NoRowDelay
 	lda var_Temp2
@@ -564,11 +564,11 @@ ft_SkipToRow:
 	lda var_Temp3
 	bmi :+
 	jsr ft_load_instrument
-:	inx									; Next channel
-	CPX_ALL_CHANNELS
-	beq :+
-	jmp @ChannelLoop
-:	lda #$00
+:
+@ChannelLoopEpilog:
+	CH_LOOP_END @ChannelLoop
+
+	lda #$00
 	sta var_SkipTo
 	rts
 

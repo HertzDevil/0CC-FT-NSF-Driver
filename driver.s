@@ -28,7 +28,7 @@ ENABLE_ROW_SKIP = 1		; Enable this to add code for seeking to a row > 0 when usi
 ;USE_S5B  = 1			; Enable this to include 5B code
 ;USE_ALL  = 1			;;; ;; ; All expansion chips, always assumes 8 N163 channels
 
-USE_MMC5_MULTIPLIER = 1	;;; ;; ; optimize multiplication using MMC5 hardware multiplier
+;USE_MMC5_MULTIPLIER = 1	;;; ;; ; optimize multiplication using MMC5 hardware multiplier
 
 .if .defined(USE_ALL)	;;; ;; ;
 	USE_VRC6 = 1

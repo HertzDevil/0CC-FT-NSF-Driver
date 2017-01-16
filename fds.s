@@ -163,10 +163,12 @@ ft_update_fds:
 	lda var_ch_FDSVolume					;;; ;; ; return if volume envelope is enabled
 	bpl @NoKill								; ;; ;;;
 	lda #$80
+	padjmp_h	7
 	sta $4080	; Make channel silent
 	sta $4084
 	sta $4087
 	rts
+	padjmp		6
 
 ; Load the waveform, index in A
 ft_load_fds_wave:
@@ -243,11 +245,9 @@ ft_check_fds_fm:
 	sta var_Temp
 	lda var_ch_ModRate + 0
 	sta AUX
-	padjmp_h	6
 	lda var_ch_PeriodCalcHi + FDS_OFFSET
 	sta var_Temp16 + 1
 	lda var_ch_PeriodCalcLo + FDS_OFFSET
-	padjmp		7
 	sta var_Temp16
 	lda #$00
 	sta AUX + 1

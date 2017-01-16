@@ -418,16 +418,20 @@ ft_period_remove:
 .if .defined(USE_N163)
 .if .defined(USE_LINEARPITCH)		;;; ;; ;
 	lda var_SongFlags
+	padjmp_h	8
 	and #FLAG_LINEARPITCH
 	bne :+
 .endif								; ;; ;;;
     lda ft_channel_type, x
     cmp #CHAN_N163
+	padjmp		7
+	padjmp_h	4
     bne :+
     ; Multiply by 4
     asl var_Temp16
     rol var_Temp16 + 1
     asl var_Temp16
+	padjmp		5
     rol var_Temp16 + 1
 :
 .endif
@@ -439,10 +443,16 @@ ft_period_remove:
 	sbc var_Temp16 + 1
 	sta var_ch_TimerPeriodHi, x
 	bcs :+                           ; Do not wrap
+.if .defined(PACKAGE)
+	bcc @pad
+	nop
+@pad:
+.endif
 	lda #$00
 	sta var_ch_TimerPeriodLo, x
 	sta var_ch_TimerPeriodHi, x
 :   rts
+	padjmp		2
 
 .if 0
 ;
@@ -545,18 +555,14 @@ ft_vibrato:
 	bne :+
 	rts
 :	clc
-	padjmp_h	9
 	adc var_ch_VibratoPos, x		; Get next position
 	and #$3F
 	sta var_ch_VibratoPos, x
-	padjmp_h	5
 	cmp #$10
-	padjmp		7
 	bcc @Phase1
 	cmp #$20
 	bcc @Phase2
 	cmp #$30
-	padjmp		5
 	bcc @Phase3
 	; Phase 4: - 15 - (Phase - 48) + depth
 	eor #$3F
@@ -570,7 +576,6 @@ ft_vibrato:
 	tay
 	lda ft_vibrato_table, y
 	sta var_Temp16
-	padjmp_h	4
 	lda #$00
 	sta var_Temp16 + 1
 	jmp @Calculate
@@ -578,7 +583,6 @@ ft_vibrato:
 	; Phase 3: - (Phase - 32) + depth
 	and #$DF
 @Negate:
-	padjmp		5
 	ora var_ch_VibratoDepth, x
 	tay
 	lda ft_vibrato_table, y

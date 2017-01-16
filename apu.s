@@ -384,13 +384,15 @@ ft_update_2a03:
 ; ==============================================================================
 ;  DPCM
 ; ==============================================================================
-.if .defined(USE_DPCM) && .defined(CHANNEL_CONTROL)
+.if .defined(USE_DPCM)
+.if .defined(CHANNEL_CONTROL)
 	lda var_Channels
 	and #$10
 	bne :+
 	rts                             ; Skip DPCM
 	;beq @Return
 :
+.endif
 .if .defined(USE_ALL)		;;; ;; ;
 	ldx #EFF_CHANS
 .elseif .defined(USE_N163)

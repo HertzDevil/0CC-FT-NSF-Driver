@@ -196,6 +196,9 @@ var_ch_vrc7_EffPatch:	 .res CH_COUNT_VRC7			;;; ;; ; V-command
 var_ch_vrc7_CustomHi:    .res CH_COUNT_VRC7
 var_ch_vrc7_CustomLo:    .res CH_COUNT_VRC7
 var_CustomPatchPtr:		 .res 2
+var_ch_vrc7_Port:		 .res CH_COUNT_VRC7			;;; ;; ; Hxx
+var_ch_vrc7_Write:		 .res 8						;;; ;; ; Ixx
+var_ch_vrc7_PatchFlag:	 .res 1
 .endif
 
 .if .defined(USE_FDS)

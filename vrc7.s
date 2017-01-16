@@ -29,6 +29,7 @@ ft_load_instrument_vrc7:
 
 ft_init_vrc7:
 	lda #$00
+	sta var_ch_vrc7_PatchFlag
 	tax
 :   stx $9010
 	jsr ft_vrc7_delay2
@@ -230,7 +231,19 @@ ft_update_vrc7:
 	cpx #$06
 	beq :+
 	jmp @LoopChannels
-:	rts
+:
+@UpdatePatch:		;;; ;; ;
+	ldx #$07
+:	asl var_ch_vrc7_PatchFlag
+	bcc :+
+	stx $9010
+	jsr ft_vrc7_delay2
+	lda var_ch_vrc7_Write, x
+	sta $9030
+	jsr ft_vrc7_delay
+:	dex
+	bpl :--
+	rts
 
 ; Used to adjust Bnum when portamento is used
 ;

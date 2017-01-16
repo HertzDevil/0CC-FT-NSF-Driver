@@ -1070,8 +1070,19 @@ ft_cmd_vrc7_patch_change:
 	sta var_ch_vrc7_EffPatch - VRC7_OFFSET, x
 	rts
 ft_cmd_vrc7_port:
+	jsr ft_get_pattern_byte
+	and #$07
+	sta var_ch_vrc7_Port - VRC7_OFFSET, x
 	rts
 ft_cmd_vrc7_write:
+	jsr ft_get_pattern_byte
+	sty var_Temp
+	ldy var_ch_vrc7_Port - VRC7_OFFSET, x
+	sta var_ch_vrc7_Write, y
+	lda bit_mask, y
+	ora var_ch_vrc7_PatchFlag
+	sta var_ch_vrc7_PatchFlag
+	ldy var_Temp
 	rts
 .endif
 

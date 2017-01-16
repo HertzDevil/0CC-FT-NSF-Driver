@@ -26,6 +26,7 @@ ft_update_vrc6:
 	ldx #$00
 	txa
 	sta var_Temp_Pointer
+	sta var_Temp3
 @ChannelLoop:
 	lda ft_duty_table_vrc6 + 1, x			;;; ;; ; offset
 	ora #$80

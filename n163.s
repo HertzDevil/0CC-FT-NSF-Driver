@@ -87,9 +87,7 @@ ft_init_n163:
 	dex
 	bne :-
 	ldx #$07
-:	lda #$00
-	sta var_ch_N163_LastHiFreq, x
-	lda #$01				;;; ;; ;
+:	lda #$01				;;; ;; ;
 	sta var_ch_WaveLen, x
 	dex
 	bpl :-

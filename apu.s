@@ -75,11 +75,14 @@ ft_update_apu:
 ;  Square 1 / 2
 ; ==============================================================================
 @Square:
+.if .defined(CHANNEL_CONTROL)
 	lda bit_mask, x
 	and var_Channels
 	bne :+
 	jmp @DoneSquare
-:	lda var_ch_Note, x			; Kill channel if note = off
+:
+.endif
+	lda var_ch_Note, x			; Kill channel if note = off
 	bne :+						; branch
 	jmp @KillSquare
 :
@@ -221,9 +224,11 @@ ft_update_apu:
 ;  Triangle
 ; ==============================================================================
 @Triangle:
+.if .defined(CHANNEL_CONTROL)
 	lda var_Channels
 	and #$04
 	beq @Noise
+.endif
 
 	lda var_ch_Volume + APU_TRI
 	beq @KillTriangle
@@ -274,11 +279,13 @@ ft_update_apu:
 ;  Noise
 ; ==============================================================================
 @Noise:
+.if .defined(CHANNEL_CONTROL)
 	lda var_Channels
 	and #$08
 	bne :+						; branch
 	jmp @DPCM
 :
+.endif
 
 	lda var_ch_Note + APU_NOI
 	bne :+						; branch
@@ -377,7 +384,7 @@ ft_update_apu:
 ; ==============================================================================
 ;  DPCM
 ; ==============================================================================
-.if .defined(USE_DPCM)
+.if .defined(USE_DPCM) && .defined(CHANNEL_CONTROL)
 	lda var_Channels
 	and #$10
 	bne :+

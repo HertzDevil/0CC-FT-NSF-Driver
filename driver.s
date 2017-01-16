@@ -222,8 +222,6 @@ var_ch_WaveLen:         .res CH_COUNT_N163			;;; ;; ; MSB is used for N163 Yxx
 var_ch_WavePos:         .res CH_COUNT_N163
 var_ch_WavePosOld:      .res CH_COUNT_N163			;;; ;; ; overridden by Yxx
 
-var_ch_N163_LastHiFreq: .res CH_COUNT_N163
-
 var_NamcoChannels:      .res 1                      ; Number of active N163 channels
 var_NamcoChannelsReg:   .res 1
 
@@ -262,7 +260,9 @@ var_SongFlags:			.res 1						; Song flags
 var_Wavetables:			.res 2						; FDS waves
 .endif
 
+.if .defined(CHANNEL_CONTROL)
 var_Channels:			.res 1						; Channel enable/disable
+.endif
 var_AllChannels:        .res 1						;;; ;; ; moved from N163
 var_EffChannels:        .res 1						; ;; ;;; check against this for DPCM channel
 
@@ -431,6 +431,16 @@ last_bss_var:			.res 1						; Not used
  .endif
 .endif
 @end:
+.endmacro
+
+.macro CPX_ALL_CHANNELS
+.if .defined(USE_ALL)		;;; ;; ;
+	cpx #CHANNELS
+.elseif .defined(USE_N163)
+	cpx var_AllChannels
+.else
+	cpx #CHANNELS
+.endif
 .endmacro
 
 ; NSF entry addresses

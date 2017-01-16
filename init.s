@@ -34,7 +34,9 @@ ft_music_init:
 
 	lda #$FF		;;; ;; ; Reset triangle linear counter
 	sta var_Linear_Counter
+.if .defined(CHANNEL_CONTROL)
 	sta var_Channels	; Enable all channels
+.endif
 
 	sta var_ch_DPCM_EffPitch
 	sta var_ch_DPCMDAC
@@ -348,7 +350,6 @@ ft_load_track:
 
 	; Read header
 	lda #$00
-	tax
 	tay
 .if .defined(RELOCATE_MUSIC)
 	clc
@@ -366,13 +367,12 @@ ft_load_track:
 	lda (var_Temp_Pointer), y			; Frame offset, high addr
 	sta var_Frame_List + 1
 .endif
-	iny
+	iny ; Y == 02
 @ReadLoop:
 	lda (var_Temp_Pointer), y			; Frame count
-	sta var_Frame_Count, x
+	sta var_Frame_Count - 2, y
 	iny
-	inx
-	cpx #$07							;;; ;; ; Groove (?)
+	cpy #$08							;;; ;; ; Groove
 	bne @ReadLoop
 
 	rts
@@ -449,13 +449,7 @@ ft_load_frame:
 	lda #$FF
 	sta var_ch_DefaultDelay, x
 	inx
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	bne @LoadPatternAddr
 ; Bankswitch values
 .if .defined(USE_BANKSWITCH)
@@ -468,13 +462,7 @@ ft_load_frame:
 	sta var_ch_Bank, x
 	iny
 	inx
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	bne @LoadBankValues
 @SkipBankValues:
 .endif
@@ -577,13 +565,7 @@ ft_SkipToRow:
 	bmi :+
 	jsr ft_load_instrument
 :	inx									; Next channel
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	beq :+
 	jmp @ChannelLoop
 :	lda #$00

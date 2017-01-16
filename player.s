@@ -30,13 +30,7 @@ ft_music_play:
 	lda #$00							;;; ;; ; Clear note trigger flag
 	sta var_ch_Trigger, x				; ;; ;;;
 :	inx
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	bne @ChanLoop
 
 	; Speed division
@@ -72,13 +66,7 @@ ft_do_row_update:
 	sta var_ch_Delay, x
 	jsr ft_read_pattern
 :	inx
-.if .defined(USE_ALL)
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	bne :--
 	
 	lda #$00
@@ -99,13 +87,7 @@ ft_read_channels:
 :	jsr ft_read_pattern					; Get new notes
 	inx ; ;; ;;;
 
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 
 	bne ft_read_channels
 
@@ -162,9 +144,9 @@ ft_skip_row_update:
 	sbc var_Tempo_Count + 1
 	sta var_Tempo_Accum + 1
 
-	; Note cut effect (Sxx)
 	ldx #$00
-@BeginCut:
+ft_loop_fx_state:
+	; Note cut effect (Sxx)
 	lda var_ch_NoteCut, x
 	beq @BeginRelease
 	bpl :+					;;; ;; ;
@@ -262,15 +244,9 @@ ft_skip_row_update:
 :	; ;; ;;;
 	inx
 
-.if .defined(USE_ALL)		;;; ;; ;
-	cpx #CHANNELS
-.elseif .defined(USE_N163)
-	cpx var_AllChannels
-.else
-	cpx #CHANNELS
-.endif
+	CPX_ALL_CHANNELS
 	beq :+
-	jmp @BeginCut						; branch
+	jmp ft_loop_fx_state					; branch
 
 	; Update channel instruments and effects
 :	ldx #$00

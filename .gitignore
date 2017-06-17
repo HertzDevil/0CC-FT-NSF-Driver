@@ -1,3 +1,9 @@
-build*/
+*.nsf
+*.deb
+*.lst
+*.nl
 *.o
 music.asm
+music.bin
+samples.bin
+music_nsf_map.txt

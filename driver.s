@@ -581,7 +581,9 @@ ft_channel_enable: ;; Patch
 	.byte .defined(USE_MMC5)
 .endrep
 .if .defined(USE_VRC6)
-	.byte .defined(USE_VRC6)
+	.repeat CH_COUNT_VRC6
+		.byte 1
+	.endrep
 .endif
 .repeat CH_COUNT_N163		; 0CC: check
 	.byte .defined(USE_N163)
